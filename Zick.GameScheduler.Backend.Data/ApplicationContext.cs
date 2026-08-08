@@ -14,4 +14,11 @@ public class ApplicationContext<TUserIdentity>(DbContextOptions options)
     public DbSet<VehicleClass> Classes { get; set; }
     public DbSet<League<TUserIdentity>> Leagues { get; set; }
     public DbSet<Session<TUserIdentity>> Sessions { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        builder.Entity<League<TUserIdentity>>()
+            .ComplexProperty(x => x.SessionSettings);
+    }
 }
