@@ -1,0 +1,23 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Zick.GameScheduler.Backend.Data.Models;
+
+namespace Zick.GameScheduler.Backend.Data;
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var builder = new HostApplicationBuilder(args);
+
+        builder.Services.AddDbContext<ApplicationContext<RacingUser>>(options =>
+        {
+            options.UseNpgsql(System.Environment.GetEnvironmentVariable("RACE_DB"));
+        });
+
+        var app = builder.Build();
+        
+        app.Run();
+    }
+}
