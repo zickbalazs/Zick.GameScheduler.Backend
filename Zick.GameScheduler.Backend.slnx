@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="Zick.GameScheduler.Backend.Data/Zick.GameScheduler.Backend.Data.csproj" />
-  <Project Path="Zick.GameScheduler.Backend.Models/Zick.GameScheduler.Backend.Models.csproj" />
 </Solution>
