@@ -1,0 +1,21 @@
+name: Build .NET project
+
+on:
+  pull_request: 
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore packages for build
+        run: dotnet restore
+      - name: Build project files
+        run: dotnet build --artifacts-path=./artifacts --config Development
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          path: artifacts
