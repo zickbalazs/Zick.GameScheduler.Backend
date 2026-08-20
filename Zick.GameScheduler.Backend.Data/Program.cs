@@ -10,10 +10,9 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = new HostApplicationBuilder(args);
-
-        builder.Services.AddDbContext<ApplicationContext<RacingUser>>(options =>
+        builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
         {
-            options.UseNpgsql(System.Environment.GetEnvironmentVariable("RACE_DB"));
+            opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
         });
 
         var app = builder.Build();
