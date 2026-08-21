@@ -1,10 +1,19 @@
+using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using Zick.GameScheduler.Backend.Dashboard.Components;
+using Zick.GameScheduler.Backend.Dashboard.Services;
+using Zick.GameScheduler.Backend.Data;
+using Zick.GameScheduler.Backend.Data.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt => 
+    opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB")));
+builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 

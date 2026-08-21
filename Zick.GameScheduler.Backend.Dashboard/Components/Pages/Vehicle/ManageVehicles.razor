@@ -1,0 +1,72 @@
+@page "/vehicles/edit"
+@using Zick.GameScheduler.Backend.Dashboard.Common
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@using Zick.GameScheduler.Backend.Data.DTOs
+@inject IVehicleService vService
+@inject NavigationManager Navigation
+@inject ISnackbar SBar
+<PageTitle>@($"{Constants.AppName} | Manage Vehicles")</PageTitle>
+
+@if (Cars.Count > 0)
+{
+    <MudText Class="my-3" Typo="Typo.h3">Vehicles</MudText>
+    <MudDivider Class="mb-3"/>
+    <MudTable T="CarDTO" Items="@Cars">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            <MudTh>Manufacturer</MudTh>
+            <MudTh>Model</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@(context.Id.ToString().Substring(0, 8))...</MudTd>
+            <MudTd>@context.Manufacturer</MudTd>
+            <MudTd>@context.Model</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           @onclick="@(()=>EditCar(context.Id))">
+                    Edit
+                </MudButton>
+                <MudButton Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           @onclick="@(()=>DeleteCar(context))">
+                    Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+else if (!IsLoading)
+{
+    <MudText Typo="Typo.h3">There are no vehicles in the database!</MudText>
+}
+
+@code {
+    IList<CarDTO> Cars { get; set; } = [];
+    bool IsLoading { get; set; } = true;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var cars = await vService.GetVehicles();
+        Cars = [..cars];
+    }
+
+    async Task DeleteCar(CarDTO car)
+    {
+        var deleteResult = await vService.DeleteVehicle(car.Id);
+        if (deleteResult.Success)
+            Cars.Remove(car);
+        else
+        {
+            SBar.Add(severity: Severity.Error,
+                message: deleteResult.Reason);
+        }
+    }
+
+    async Task EditCar(Guid id)
+    {
+        Navigation.NavigateTo($"/vehicles/edit/{id}");
+    }
+    
+}

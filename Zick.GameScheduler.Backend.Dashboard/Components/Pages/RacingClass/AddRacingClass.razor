@@ -1,0 +1,39 @@
+@page "/classes/add"
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@using Zick.GameScheduler.Backend.Data.DTOs
+@inject IVehicleService VehicleService
+
+
+<MudText Typo="Typo.h3" Class="my-3">Add new racing class</MudText>
+<MudDivider Class="mb-3"/>
+
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudForm>
+            <MudTextField Class="mb-3" Label="Identifier" T="string" Placeholder="GT3" Variant="Variant.Filled"/>
+            <MudTextField Class="mb-3" Label="Name" T="string"/>
+            <MudTextField Class="mb-3" Label="Color" T="string" Placeholder="#fff"/>
+            <!-- TODO: This Form -->
+        </MudForm>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+
+    AddRacingClassForm Form { get; set; } = new()
+    {
+
+    };
+
+    IList<CarDTO> CarPool { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        CarPool = await VehicleService.GetVehicles();
+    }
+
+}

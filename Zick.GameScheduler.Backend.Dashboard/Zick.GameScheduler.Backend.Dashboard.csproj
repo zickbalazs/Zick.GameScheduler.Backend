@@ -7,4 +7,13 @@
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MudBlazor" Version="9.8.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Zick.GameScheduler.Backend.Data\Zick.GameScheduler.Backend.Data.csproj" />
+      <ProjectReference Include="..\Zick.GameScheduler.Backend.Scheduler\Zick.GameScheduler.Backend.Scheduler.csproj" />
+    </ItemGroup>
+
 </Project>
