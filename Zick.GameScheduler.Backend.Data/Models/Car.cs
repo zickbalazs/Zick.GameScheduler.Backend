@@ -20,6 +20,7 @@ public class Car<TUserIdentity> : AssettoContent where TUserIdentity : IdentityU
     {
         Id = car.Id,
         Manufacturer = car.Manufacturer,
-        Model = car.Model
+        Model = car.Model,
+        FolderName = car.FolderName
     };
 }

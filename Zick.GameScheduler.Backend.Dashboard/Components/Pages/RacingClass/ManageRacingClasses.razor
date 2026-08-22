@@ -1,5 +1,29 @@
-<h3>ManageRacingClasses</h3>
+@page "/classes/edit"
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@using Zick.GameScheduler.Backend.Data.DTOs
+@inject IRacingClassService RacingClassService
+
+<MudTable T="RacingClassDTO" Items="@Classes">
+    <HeaderContent>
+        <MudTh>Abbreviation</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Vehicles in class</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Abbreviation</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.Cars.Count</MudTd>
+    </RowTemplate>
+</MudTable>
+
 
 @code {
-    
+    IList<RacingClassDTO> Classes { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Classes = await RacingClassService.GetClasses();
+    }
+
 }

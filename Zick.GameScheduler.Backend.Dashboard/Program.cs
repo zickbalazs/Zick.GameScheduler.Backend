@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt => 
     opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB")));
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
+builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
