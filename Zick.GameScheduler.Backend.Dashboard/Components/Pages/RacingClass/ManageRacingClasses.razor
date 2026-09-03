@@ -1,18 +1,33 @@
 @page "/classes/edit"
+@using Zick.GameScheduler.Backend.Dashboard.Common
 @using Zick.GameScheduler.Backend.Dashboard.Services
 @using Zick.GameScheduler.Backend.Data.DTOs
 @inject IRacingClassService RacingClassService
+@inject NavigationManager NavManager
+@inject ISnackbar SnackService
+<PageTitle>@($"{Constants.AppName} | Manage Classes")</PageTitle>
 
+<MudText Class="my-3" Typo="Typo.h3">Racing Classes</MudText>
+<MudDivider Class="mb-3"/>
 <MudTable T="RacingClassDTO" Items="@Classes">
     <HeaderContent>
         <MudTh>Abbreviation</MudTh>
         <MudTh>Name</MudTh>
         <MudTh>Vehicles in class</MudTh>
+        <MudTh>Actions</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>@context.Abbreviation</MudTd>
         <MudTd>@context.Name</MudTd>
         <MudTd>@context.Cars.Count</MudTd>
+        <MudTd>
+            <MudButton StartIcon="@Icons.Material.Filled.Edit" 
+                       Color="Color.Primary"
+                       OnClick="@(()=>NavigateToClass(@context.Abbreviation))">Edit</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Delete" 
+                       Color="Color.Error"
+                       OnClick="@(()=>TryToDelete(@context))">Delete</MudButton>
+        </MudTd>
     </RowTemplate>
 </MudTable>
 
@@ -26,4 +41,24 @@
         Classes = await RacingClassService.GetClasses();
     }
 
+    void NavigateToClass(string identifier)
+    {
+        NavManager.NavigateTo($"/classes/edit/{identifier}");
+    }
+
+    async Task TryToDelete(RacingClassDTO rClass)
+    {
+        try
+        {
+            var result = await RacingClassService.DeleteClass(rClass.Abbreviation);
+            if (result.Success)
+                Classes.Remove(rClass);
+        }
+        catch (Exception e)
+        {
+            SnackService.Add(message: e.Message,
+                             severity: Severity.Error);
+        }
+    }
+    
 }

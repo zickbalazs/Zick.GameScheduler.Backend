@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,10 +11,20 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = new HostApplicationBuilder(args);
-        builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && builder.Environment.IsDevelopment())
         {
-            opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
-        });
+            builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
+            {
+                opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");
+            });
+        }
+        else
+        {
+            builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
+            {
+                opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
+            });    
+        }
 
         var app = builder.Build();
         

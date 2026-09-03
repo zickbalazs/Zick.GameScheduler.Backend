@@ -13,10 +13,9 @@
 <MudGrid>
     <MudItem xs="10" md="8" lg="6">
         <MudForm>
-            <MudTextField Class="mb-3" Label="Identifier" T="string" Placeholder="GT3" />
-            <MudTextField Class="mb-3" Label="Name" HelperText="Optional" T="string" Placeholder="Grand Touring Tier 3"/>
-            <MudTextField Class="mb-3" Label="Color" HelperText="Optional" T="string" Placeholder="#fff"/>
-            <!-- TODO: This Form -->
+            <MudTextField Class="mb-3" @bind-Value="Form.Identifier" Label="Identifier" T="string" Placeholder="GT3" />
+            <MudTextField Class="mb-3" @bind-Value="Form.Name" Label="Name" HelperText="Optional" T="string" Placeholder="Grand Touring Tier 3"/>
+            <MudTextField Class="mb-3" @bind-Value="Form.Color" Label="Color" HelperText="Optional" T="string" Placeholder="#fff"/>
             <MudGrid Class="mb-3">
                 <MudItem xs="10">
                     <MudSelect Margin="Margin.Normal" @bind-Value="SelectedCar" Placeholder="Select a vehicle">

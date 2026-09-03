@@ -1,5 +1,116 @@
-<h3>EditRacingClass</h3>
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@using Zick.GameScheduler.Backend.Data.DTOs
+@inject IRacingClassService RacingClassService
+@inject IVehicleService VehicleService
+@inject ISnackbar SnackService
+@page "/classes/edit/{Id}"
+
+<MudText Typo="Typo.h3" Class="my-3">Edit @Form.Identifier</MudText>
+<MudDivider Class="mb-3"/>
+
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudForm>
+            <MudTextField Class="mb-3" @bind-Value="Form.Identifier" Label="Identifier" T="string" Placeholder="GT3" />
+            <MudTextField Class="mb-3" @bind-Value="Form.Name" Label="Name" HelperText="Optional" T="string" Placeholder="Grand Touring Tier 3"/>
+            <MudTextField Class="mb-3" @bind-Value="Form.Color" Label="Color" HelperText="Optional" T="string" Placeholder="#fff"/>
+            <MudGrid Class="mb-3">
+                <MudItem xs="10">
+                    <MudSelect Margin="Margin.Normal" @bind-Value="SelectedCar" Placeholder="Select a vehicle">
+                        @foreach (var car in Cars)
+                        {
+                            <MudSelectItem Value="@car" T="CarDTO">@car.Manufacturer @car.Model</MudSelectItem>
+                        }
+                    </MudSelect>        
+                </MudItem>
+                <MudItem xs="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" 
+                                   Color="Color.Primary"
+                                   @onclick="AddCar"
+                                   Disabled="@CannotAdd" />
+                </MudItem>
+            </MudGrid>
+            
+            @if (Form.Cars.Count > 0)
+            {
+                <MudText Class="mb-3">Cars in the class</MudText>
+                <MudGrid Class="mb-3">
+                    @foreach (var car in Form.Cars)
+                    {
+                        <MudItem>
+                            <MudChip T="CarDTO"
+                                     CloseIcon="@Icons.Material.Filled.Close"
+                                     Variant="Variant.Text"
+                                     OnClose="@(()=>RemoveCar(car))">
+                                @($"{car.Manufacturer} {car.Model}")
+                            </MudChip>
+                        </MudItem>
+                    }
+                </MudGrid>            
+            }
+            <MudGrid>
+                <MudItem>
+                    <MudButton Color="Color.Primary" @onclick="Submit" StartIcon="@Icons.Material.Filled.Add">Submit</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudItem>
+</MudGrid>
+
+
+
+
 
 @code {
+    [Parameter] public string Id { get; set; } = "";
+    EditRacingClassForm Form { get; set; } = new();
+    IList<CarDTO> Cars { get; set; } = [];
+    CarDTO? SelectedCar { get; set; } = null;
+    bool CannotAdd => SelectedCar == null;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var formDto = await RacingClassService.GetClass(Id);
+        Cars = (await VehicleService.GetVehicles()).Except(formDto.Cars).ToList();
+        FillForm(formDto);
+    }
+
+    void RemoveCar(CarDTO car)
+    {
+        Cars.Add(car);
+        Form.Cars.Remove(car);
+    }
+    
+    void FillForm(RacingClassDTO dto)
+    {
+        Form.Identifier = dto.Abbreviation;
+        Form.Name = dto.Name;
+        Form.Color = dto.Color;
+        Form.Cars = dto.Cars;
+    }
+
+    void AddCar()
+    {
+        if (SelectedCar != null)
+        {
+            Form.Cars.Add(SelectedCar);
+            SelectedCar = null;
+        }
+    }
+
+    async Task Submit()
+    {
+        try
+        {
+            await RacingClassService.ModifyClass(Form);
+        }
+        catch (Exception e)
+        {
+            SnackService.Add(message: e.Message, severity: Severity.Error);
+        }
+    }
     
 }

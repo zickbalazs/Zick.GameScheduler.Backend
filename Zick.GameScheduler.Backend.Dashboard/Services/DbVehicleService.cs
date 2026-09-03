@@ -25,7 +25,7 @@ public class DbVehicleService(ApplicationContext<RacingUserIdentity> ctx) : IVeh
             var s = await ctx.SaveChangesAsync();
             return s > 0;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return false;
         }
@@ -33,7 +33,24 @@ public class DbVehicleService(ApplicationContext<RacingUserIdentity> ctx) : IVeh
 
     public async Task<(bool Success, string Reason)> EditVehicle(EditVehicleForm form)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var matches = ctx.Cars.Where(x => x.Id == form.Id);
+
+            await matches.ExecuteUpdateAsync(m =>
+            {
+                m.SetProperty(x => x.Manufacturer, form.Manufacturer)
+                    .SetProperty(x => x.Model, form.Model)
+                    .SetProperty(x => x.FolderName, form.Folder);
+            });
+
+            var updatedRows = await ctx.SaveChangesAsync();
+            return (updatedRows > 0, "");
+        }
+        catch (Exception e)
+        {
+            return (false, e.Message);
+        }
     }
 
     public async Task<(bool Success, string Reason)> DeleteVehicle(Guid id)

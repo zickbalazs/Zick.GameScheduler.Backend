@@ -1,0 +1,62 @@
+﻿@page "/tracks/edit"
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@using Zick.GameScheduler.Backend.Data.DTOs
+@inject ITrackService TrackService
+@inject NavigationManager NavManager
+@inject ISnackbar SnackService
+<TitleComponent Title="Manage Tracks" />
+
+<MudTable T="TrackDTO" Items="@Tracks">
+    <HeaderContent>
+        <MudTh>#</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Country code</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Id.ToString().Substring(0,8)</MudTd>
+        <MudTh>@context.Name</MudTh>
+        <MudTh>@context.CountryCode</MudTh>
+        <MudTh>
+            <MudButton Color="Color.Primary" @onclick="()=>EditItem(context.Id)" StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
+            <MudButton Color="Color.Error" @onclick="()=>DeleteItem(context.Id)" StartIcon="@Icons.Material.Filled.Delete">Delete</MudButton>
+        </MudTh>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    IList<TrackDTO> Tracks { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Tracks = await TrackService.GetTracks();
+    }
+
+    void EditItem(Guid id)
+    {
+        NavManager.NavigateTo($"/tracks/edit/{id}");
+    }
+
+    async Task DeleteItem(Guid id)
+    {
+        try
+        {
+            var result = await TrackService.DeleteTrack(id);
+
+            if (result.Success)
+                Tracks.Remove(Tracks.First(x => x.Id == id));
+            
+            else
+                SnackService.Add(message: result.Message,
+                                 severity: Severity.Error);
+                
+        }
+        catch (Exception e)
+        {
+            SnackService.Add(message: e.Message,
+                             severity: Severity.Error);
+        }
+    }
+    
+}

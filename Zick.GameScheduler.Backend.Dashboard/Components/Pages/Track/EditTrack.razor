@@ -1,0 +1,65 @@
+﻿@page "/tracks/edit/{Id}"
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@inject ITrackService TrackService
+
+<TitleComponent Title="@($"Edit {Form.Name}")"/>
+
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudTextField T="Guid"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Label="Id"
+                      Value="@IdInGuid"
+                      Disabled="true"/>
+        <MudTextField T="string"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Placeholder="@Form.Name"
+                      Label="Name"
+                      @bind-Value="Form.Name"/>
+        <MudTextField T="string"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Placeholder="@Form.CountryCode"
+                      Label="Country code"
+                      @bind-Value="Form.CountryCode"/>
+        <MudTextField T="string"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Placeholder="@Form.Folder"
+                      Label="Folder name"
+                      @bind-Value="Form.Folder"/>
+        <MudGrid>
+            <MudItem>
+                <MudButton Color="Color.Primary" @onclick="Submit" StartIcon="@Icons.Material.Filled.Add">Submit</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    Guid IdInGuid => new (Id);
+    EditTrackForm Form { get; } = new();
+    
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var formDto = await TrackService.GetTrack(IdInGuid);
+        Form.Id = formDto.Id;
+        Form.Name = formDto.Name;
+        Form.CountryCode = formDto.CountryCode;
+        Form.Folder = formDto.Folder;
+    }
+
+    async Task Submit()
+    {
+        
+    }
+}
