@@ -11,7 +11,7 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = new HostApplicationBuilder(args);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && builder.Environment.IsDevelopment())
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && builder.Environment.IsDevelopment())
         {
             builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
             {

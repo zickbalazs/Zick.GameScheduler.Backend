@@ -6,10 +6,11 @@ using Zick.GameScheduler.Backend.Data.Models;
 
 namespace Zick.GameScheduler.Backend.Dashboard.Services;
 
-public class DbTrackService(ApplicationContext<RacingUserIdentity> ctx) : ITrackService
+public class DbTrackService(ApplicationContext<RacingUserIdentity> ctx, ILogger<DbTrackService> logger) : ITrackService
 {
     public async Task<bool> AddTrack(AddTrackForm form)
     {
+        logger.LogTrace("starting track addition into database");
         try
         {
             Track<RacingUserIdentity> addition = new()
@@ -21,11 +22,16 @@ public class DbTrackService(ApplicationContext<RacingUserIdentity> ctx) : ITrack
 
             await ctx.AddAsync(addition);
             int affectedRows = await ctx.SaveChangesAsync();
-
-            return affectedRows > 0;
+            bool success = affectedRows > 0;
+            if (success)
+                logger.LogInformation("added new entry to tracks with id: {}", addition.Id);
+            else
+                logger.LogError("addition was not successful into db, no rows were changed");
+            return success;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            logger.LogError(e.Message);
             return false;
         }
     }
@@ -58,10 +64,16 @@ public class DbTrackService(ApplicationContext<RacingUserIdentity> ctx) : ITrack
             
             var affectedRows = await ctx.SaveChangesAsync();
             
+            if (affectedRows > 0)
+                logger.LogInformation("deleted track with id: {id}", id);
+            else 
+                logger.LogError("track deletion was not possible, rows were not affected");
+            
             return (affectedRows > 0, affectedRows > 0 ? "" : "Nothing was deleted!");
         }
         catch (Exception e)
         {
+            logger.LogError("deletion of track with id: {id} failed due to error: {errorMessage}", id, e.Message);
             return (false, e.Message);
         }
     }

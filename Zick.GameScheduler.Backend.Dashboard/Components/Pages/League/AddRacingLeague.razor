@@ -1,0 +1,82 @@
+@page "/leagues/add"
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@using Zick.GameScheduler.Backend.Data.DTOs
+@inject ITrackService TrackService
+<TitleComponent Title="Add Racing League"/>
+
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudForm>
+            <MudTextField Label="Name" T="string" Class="mb-3"/>
+            <MudTextField Label="Description" T="string" Class="mb-3"/>
+            <MudNumericField T="double" Min="0" Label="Repeat interval (Hours)" Class="mb-3"/>
+            <MudDateRangePicker @bind-DateRange="Form.Duration" Label="Duration" Class="mb-3"/>
+            <MudSelect T="TrackDTO" Label="Circuit" Class="mb-3">
+                @foreach (var circuit in Circuits)
+                {
+                    <MudSelectItem T="TrackDTO" Value="@circuit">@circuit.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudGrid>
+                <MudItem xs="2">
+                    <MudIconButton Size="Size.Large" Variant="Variant.Outlined" Class="my-auto" Icon="@Icons.Material.Filled.Add"/>
+                </MudItem>
+                <MudItem xs="10">
+                    <MudSelect Variant="Variant.Outlined" Class="mb-3" T="RacingClassDTO" Label="Racing Class">
+                        @foreach (var rClass in Classes)
+                        {
+                            <MudSelectItem T="RacingClassDTO"></MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+            
+        </MudForm>
+    </MudItem>
+</MudGrid>
+<MudButton FullWidth="false" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Add</MudButton>
+
+
+@code {
+
+    AddLeagueForm Form { get; set; } = new();
+    IList<TrackDTO> Circuits { get; set; } = [];
+    IList<RacingClassDTO> Classes { get; set; } = [];
+
+    void CreatePracticeData()
+    {
+        Form.PracticeData = new()
+        {
+            DurationInMinutes = 0,
+            Laps = 0,
+            SessionName = ""
+        };
+    }
+
+    void CreateQualifyData()
+    {
+        Form.QualifyData = new()
+        {
+            DurationInMinutes = 0,
+            Laps = 0,
+            SessionName = ""
+        };
+    }
+
+    void CreateRace()
+    {
+        Form.Race = new()
+        {
+            DurationInMinutes = 0,
+            Laps = 0,
+            SessionName = ""
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Circuits = await TrackService.GetTracks();
+    }
+}

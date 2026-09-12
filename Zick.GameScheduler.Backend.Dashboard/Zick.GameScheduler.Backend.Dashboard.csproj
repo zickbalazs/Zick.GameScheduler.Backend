@@ -10,11 +10,16 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
       <PackageReference Include="MudBlazor" Version="9.8.0" />
+      <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Zick.GameScheduler.Backend.Data\Zick.GameScheduler.Backend.Data.csproj" />
       <ProjectReference Include="..\Zick.GameScheduler.Backend.Scheduler\Zick.GameScheduler.Backend.Scheduler.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Components\Pages\Sessions\" />
     </ItemGroup>
 
 </Project>

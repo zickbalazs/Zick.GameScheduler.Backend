@@ -9,9 +9,10 @@ using Zick.GameScheduler.Backend.Data.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
 {
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");
 
     else
