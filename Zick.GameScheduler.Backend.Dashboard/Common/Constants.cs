@@ -90,16 +90,22 @@ public static class Constants
             Links = [
                 new()
                 {
-                    Name = "Add Session",
+                    Name = "Add Custom Session",
                     Icon = MudBlazor.Icons.Material.Filled.Add,
                     Href = "/sessions/add"
                 },
                 new()
                 {
-                    Name = "Manage Sessions",
+                    Name = "Manage League Sessions",
                     Icon = MudBlazor.Icons.Material.Filled.ManageAccounts,
-                    Href = "/sessions/edit"
-                }            
+                    Href = "/sessions/edit/league"
+                },
+                new()
+                {
+                    Name = "Manage Custom Sessions",
+                    Icon = MudBlazor.Icons.Material.Filled.ManageAccounts,
+                    Href = "/sessions/edit/custom"
+                }
             ]
         }
     ];

@@ -26,6 +26,7 @@ public class League<TUserIdentity> where TUserIdentity : IdentityUser
     // Relations
     public virtual Track<TUserIdentity> CurrentTrack { get; set; }
     public virtual IList<RacingClass<TUserIdentity>> Classes { get; } = [];
+    public virtual IList<LeagueSession<TUserIdentity>> Sessions { get; } = [];
 
     public static implicit operator LeagueDTO(League<TUserIdentity> league) => new()
     {
@@ -39,7 +40,8 @@ public class League<TUserIdentity> where TUserIdentity : IdentityUser
         Qualify = league.Qualify,
         Race = league.Race,
         CurrentTrackId = league.CurrentTrack.Id,
-        CurrentClassIds = [ ..league.Classes.Select(x=>x.Abbreviation) ]
+        CurrentClassIds = [ ..league.Classes.Select(x=>x.Abbreviation) ],
+        Sessions = [ ..league.Sessions ]
     };
 
 

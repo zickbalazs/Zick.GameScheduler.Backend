@@ -18,8 +18,4 @@
       <ProjectReference Include="..\Zick.GameScheduler.Backend.Scheduler\Zick.GameScheduler.Backend.Scheduler.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Components\Pages\Sessions\" />
-    </ItemGroup>
-
 </Project>

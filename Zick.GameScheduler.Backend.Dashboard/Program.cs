@@ -9,7 +9,12 @@ using Zick.GameScheduler.Backend.Data.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddOpenTelemetry();
+builder.Logging.AddOpenTelemetry(opt =>
+{
+    opt.IncludeFormattedMessage = true;
+    opt.IncludeScopes = true;
+});
 builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
 {
     if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -22,6 +27,7 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
 builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
+builder.Services.AddScoped<ILeagueService, DbLeagueService>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
