@@ -1,0 +1,49 @@
+﻿@page "/tracks/add"
+@using Zick.GameScheduler.Backend.Dashboard.Common
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@inject ITrackService TrackService
+@inject NavigationManager NavManager
+
+<PageTitle>@(Constants.AppName) | Add new track</PageTitle>
+<TitleComponent Title="@Title"/>
+
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudTextField T="string"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Placeholder="Hungaroring"
+                      Label="Name"
+                      @bind-Value="Form.Name"/>
+        <MudTextField T="string"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Placeholder="HUN"
+                      Label="Country code"
+                      @bind-Value="Form.CountryCode"/>
+        <MudTextField T="string"
+                      Class="mb-3"
+                      Variant="Variant.Text"
+                      Placeholder="/tracks/hungaroring"
+                      Label="Folder name"
+                      @bind-Value="Form.Folder"/>
+        <MudGrid>
+            <MudItem>
+                <MudButton Color="Color.Primary" @onclick="Submit" StartIcon="@Icons.Material.Filled.Add">Submit</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+@code {
+    string Title => "Add new track";
+    AddTrackForm Form { get; } = new();
+
+    async Task Submit()
+    {
+        var success = await TrackService.AddTrack(Form);
+        if (success)
+            NavManager.NavigateTo("/tracks/edit");
+    }
+    
+}
