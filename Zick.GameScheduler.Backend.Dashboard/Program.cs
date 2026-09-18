@@ -5,6 +5,7 @@ using Zick.GameScheduler.Backend.Dashboard.Components;
 using Zick.GameScheduler.Backend.Dashboard.Services;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
+using Zick.GameScheduler.Backend.Scheduler.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,11 +24,15 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
     else
         opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
 });
-    
+// LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
 builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
 builder.Services.AddScoped<ILeagueService, DbLeagueService>();
+
+// SCHEDULER SERVICES
+builder.Services.AddScoped<ISessionSchedulerService, QuartzSchedulerService>();
+
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
