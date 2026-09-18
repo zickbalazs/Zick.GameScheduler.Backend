@@ -1,0 +1,27 @@
+@using Zick.GameScheduler.Backend.Dashboard.Common
+@using Zick.GameScheduler.Backend.Dashboard.Models
+<MudAppBar>
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ChangeMenu"/>
+</MudAppBar>
+<MudDrawer Open="@MenuOpen">
+    <MudDrawerHeader>@Constants.AppName</MudDrawerHeader>
+    <MudNavMenu>
+        @foreach (NavMenuGroup group in Constants.NavMenuGroups)
+        {
+            <MudNavGroup Icon="@group.Icon" Title="@group.Name">
+                @foreach (NavMenuItem item in group.Links)
+                {
+                    <MudNavLink Icon="@item.Icon" Href="@item.Href">@item.Name</MudNavLink>
+                }
+            </MudNavGroup>
+        }
+    </MudNavMenu>
+</MudDrawer>
+@code {
+    bool MenuOpen { get; set; }
+
+    void ChangeMenu()
+    {
+        MenuOpen = !MenuOpen;
+    }
+}

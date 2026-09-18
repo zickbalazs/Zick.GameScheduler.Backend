@@ -1,0 +1,13 @@
+@page "/leagues/edit/{Id}"
+
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+    public Guid? GuidId => new(Id);
+
+    
+
+
+
+}

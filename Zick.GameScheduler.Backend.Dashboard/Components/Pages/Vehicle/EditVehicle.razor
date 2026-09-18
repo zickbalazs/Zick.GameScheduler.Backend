@@ -1,0 +1,44 @@
+@page "/vehicles/edit/{Id}"
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@inject IVehicleService VehicleService
+
+<MudText Typo="Typo.h3">Edit @Form.Manufacturer @Form.Model </MudText>
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudForm>
+            <MudTextField Class="mb-3" Label="Id" Variant="Variant.Filled" T="Guid" Value="@Form.Id" Disabled="true"/>
+            <MudTextField Class="mb-3" Label="Model" Variant="Variant.Filled" T="string" @bind-Value="Form.Model"/>
+            <MudTextField Class="mb-3" Label="Manufacturer" Variant="Variant.Filled" T="string" @bind-Value="Form.Manufacturer"/>
+            <MudTextField Class="mb-3" Label="Folder Name" Variant="Variant.Filled" T="string" @bind-Value="Form.Folder"/>
+        </MudForm>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    EditVehicleForm Form { get; set; } = new()
+    {
+        Model = "",
+        Manufacturer = "",
+        Id = Guid.Empty,
+        Folder = ""
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Guid id = new Guid(Id!);
+        var editCar = await VehicleService.GetVehicle(id);
+
+        Form.Id = id;
+        Form.Model = editCar.Model;
+        Form.Manufacturer = editCar.Manufacturer;
+        Form.Folder = editCar.FolderName;
+
+    }
+
+}

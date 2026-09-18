@@ -1,6 +1,6 @@
-namespace Zick.GameScheduler.Backend.Data.DTOs;
+﻿namespace Zick.GameScheduler.Backend.Dashboard.Models.Form;
 
-public class TrackDTO
+public class EditTrackForm
 {
     public Guid Id { get; set; }
     public string Name { get; set; }

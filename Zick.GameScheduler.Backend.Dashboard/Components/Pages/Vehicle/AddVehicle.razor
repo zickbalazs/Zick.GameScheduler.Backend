@@ -1,0 +1,39 @@
+@using Zick.GameScheduler.Backend.Dashboard.Common
+@using Zick.GameScheduler.Backend.Dashboard.Models.Form
+@using Zick.GameScheduler.Backend.Dashboard.Services
+@inject IVehicleService vService
+@inject NavigationManager nManager
+@page "/vehicles/new"
+<PageTitle> @($"{Constants.AppName} | Add Vehicle") </PageTitle>
+
+<MudText Typo="Typo.h3" Class="my-3">Add new vehicle</MudText>
+<MudDivider Class="mb-3" />
+<MudGrid>
+    <MudItem xs="10" md="8" lg="6">
+        <MudForm>
+            <MudTextField T="string" @bind-Value="Form.Manufacturer" Placeholder="Ford" Label="Car Manufacturer"/>
+            <MudTextField T="string" @bind-Value="Form.Model" Placeholder="Escort Mk. I" Label="Car Model"/>
+            <MudTextField T="string" @bind-Value="Form.FolderName" Placeholder="/cars/ford_esc_mk1" Label="Car Model"/>
+        </MudForm>
+    </MudItem>
+</MudGrid>
+<MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" @onclick="TryAdd" >Add</MudIconButton>
+
+
+@code {
+    
+    AddVehicleForm Form { get; set; } = new()
+    {
+        FolderName = "",
+        Manufacturer = "",
+        Model = ""
+    };
+
+    async Task TryAdd()
+    {
+        var success = await vService.AddVehicle(Form);
+        if (success)
+            nManager.NavigateTo("/vehicles/edit");
+    }
+    
+}

@@ -23,6 +23,7 @@ public class Track<TUserIdentity> : AssettoContent where TUserIdentity : Identit
     {
         Id = track.Id,
         Name = track.Name,
-        CountryCode = track.CountryCode
+        CountryCode = track.CountryCode,
+        Folder = track.FolderName
     };
 }

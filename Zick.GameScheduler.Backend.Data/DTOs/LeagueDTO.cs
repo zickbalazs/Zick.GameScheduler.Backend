@@ -15,4 +15,5 @@ public class LeagueDTO
     public SessionData? Race { get; set; }
     public Guid CurrentTrackId { get; set; }
     public IList<string> CurrentClassIds { get; set; } = [];
+    public IList<SessionDTO> Sessions { get; set; } = [];
 }
