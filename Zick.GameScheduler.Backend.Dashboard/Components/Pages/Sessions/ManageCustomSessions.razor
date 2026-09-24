@@ -1,5 +1,13 @@
 @page "/sessions/edit/custom"
-
+@using Zick.GameScheduler.Backend.Scheduler.Services
+@inject ISessionSchedulerService SchedulerService
 @code {
-    
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await SchedulerService.CreateSessionFor(new Guid("43705E5D-0F61-45F9-8269-0C48C3873372"));
+    }
+
 }

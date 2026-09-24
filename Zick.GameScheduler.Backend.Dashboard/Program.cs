@@ -1,6 +1,9 @@
 using System.Runtime.InteropServices;
+using Docker.DotNet;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using Quartz;
+using Quartz.AspNetCore;
 using Zick.GameScheduler.Backend.Dashboard.Components;
 using Zick.GameScheduler.Backend.Dashboard.Services;
 using Zick.GameScheduler.Backend.Data;
@@ -24,6 +27,7 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
     else
         opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
 });
+// CONTAINER SERVICE
 // LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
@@ -31,8 +35,25 @@ builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
 builder.Services.AddScoped<ILeagueService, DbLeagueService>();
 
 // SCHEDULER SERVICES
+builder.Services.AddQuartz(opt =>
+{
+    opt.UsePersistentStore(o =>
+    {
+        o.UseSystemTextJsonSerializer();
+        o.UseProperties = true;
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            o.UseSQLite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "sched.db")}");
+        else
+            o.UsePostgres(Environment.GetEnvironmentVariable("RACE_SCHED_DB") ?? 
+                          throw new KeyNotFoundException("Connection String not found!"));
+    });
+});
+builder.Services.AddQuartzServer(opt =>
+{
+    opt.WaitForJobsToComplete = false;
+});
 builder.Services.AddScoped<ISessionSchedulerService, QuartzSchedulerService>();
-
+builder.Services.AddScoped<ISessionService, DbSessionService>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

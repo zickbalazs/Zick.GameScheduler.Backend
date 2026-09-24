@@ -8,7 +8,7 @@ public interface ISessionService
     Task<IList<SessionDTO>> GetCustomSessions();
     Task<IList<SessionDTO>> GetSessionByLeague(Guid leagueId);
     Task<SessionDTO> GetSession(Guid id);
-    Task<(bool Success, string Reason)> AddSession(AddSessionForm form);
+    Task<Guid> AddSession(AddSessionForm form);
     Task<(bool Success, string Reason)> UpdateSession(EditSessionForm form);
     Task<(bool Success, string Reason)> DeleteSession(Guid id);
     Task<bool> CancelSession(Guid id);

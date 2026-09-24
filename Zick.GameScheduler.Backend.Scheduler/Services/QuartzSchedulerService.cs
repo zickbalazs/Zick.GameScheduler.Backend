@@ -1,11 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Quartz;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
+using Zick.GameScheduler.Backend.Scheduler.Jobs;
 
 namespace Zick.GameScheduler.Backend.Scheduler.Services;
 
-public class QuartzSchedulerService(ApplicationContext<RacingUserIdentity> ctx, ILogger<QuartzSchedulerService> logger) : ISessionSchedulerService
+public class QuartzSchedulerService(ApplicationContext<RacingUserIdentity> ctx,
+    ILogger<QuartzSchedulerService> logger,
+    ISchedulerFactory scheduler) : ISessionSchedulerService
 {
     public async Task CreateSessionFor(Guid sessionId)
     {
@@ -19,8 +23,18 @@ public class QuartzSchedulerService(ApplicationContext<RacingUserIdentity> ctx, 
             if (session is null)
                 logger.LogError("session is not found in db");
             else
-                logger.LogInformation("found session in db");
-            
+            {
+                logger.LogInformation("found session in db, sending job for scheduler");
+                var job = JobBuilder.Create<StartSessionJob>()
+                    .WithIdentity($"{sessionId}", "session-wait-jobs")
+                    .Build();
+                var trigger = TriggerBuilder.Create()
+                    .ForJob(job)
+                    .StartAt(session.Start.AddMinutes(-5))
+                    .Build();
+
+                await (await scheduler.GetScheduler()).ScheduleJob(job, trigger);
+            }
         }
         catch (Exception e)
         {
