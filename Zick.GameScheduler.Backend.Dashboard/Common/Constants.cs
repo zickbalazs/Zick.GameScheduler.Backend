@@ -7,6 +7,7 @@ public static class Constants
 {
     public const string AppName = "Assetto Corsa Game Scheduler";
     public static Guid CustomLeagueId = new Guid("CF4B486E-430C-4508-A1E9-DF636468EE53");
+    public const string CustomRacingClass = "CSTM";
     public static NavMenuGroup[] NavMenuGroups = [
         new()
         {

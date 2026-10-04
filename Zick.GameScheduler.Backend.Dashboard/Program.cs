@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Quartz;
 using Quartz.AspNetCore;
+using Zick.GameScheduler.Backend.Dashboard.Common;
 using Zick.GameScheduler.Backend.Dashboard.Components;
 using Zick.GameScheduler.Backend.Dashboard.Services;
 using Zick.GameScheduler.Backend.Data;
@@ -60,6 +61,53 @@ builder.Services.AddRazorComponents()
 builder.Services.AddMudServices();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    var ctx = app.Services.CreateScope().ServiceProvider.GetService<ApplicationContext<RacingUserIdentity>>()!;
+
+    var customLeague = ctx.Leagues.FirstOrDefault(x => x.Id == Constants.CustomLeagueId);
+    var customClass = ctx.Classes.FirstOrDefault(x => x.Abbreviation == Constants.CustomRacingClass);
+
+
+    if (customClass is null)
+    {
+        var classDbEntry = ctx.Classes.Add(new()
+        {
+            Abbreviation = Constants.CustomRacingClass,
+            Name = "Custom Races Class"
+        });
+        ctx.SaveChanges();
+        customClass = classDbEntry.Entity;
+    }
+    
+    if (customLeague is null)
+    {
+        var leagueDbEntry = ctx.Leagues.Add(new()
+        {
+            Id = Constants.CustomLeagueId,
+            Name = "Custom Racing League",
+            Start = DateTime.Now,
+            End = DateTime.MaxValue,
+            CurrentTrack = ctx.Tracks.First(),
+            Interval = TimeSpan.FromDays(365),
+            Qualify = new()
+            {
+                DurationInMinutes = 12,
+                SessionName = "Qualifying"
+            },
+            Race = new()
+            {
+                SessionName = "Main Event",
+                DurationInMinutes = 30
+            }
+        });
+        leagueDbEntry.Entity.Classes.Add(customClass);
+        ctx.SaveChanges();
+    }
+    
+    
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

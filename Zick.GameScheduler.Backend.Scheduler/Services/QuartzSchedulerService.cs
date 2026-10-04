@@ -39,9 +39,13 @@ public class QuartzSchedulerService(ApplicationContext<RacingUserIdentity> ctx,
         catch (Exception e)
         {
             logger
-                .LogError("job failed with error type of {errorType} and with message: {errorMessage}", 
+                .LogError("job failed with error type of {errorType} and with message: {errorMessage}, cancelling race for {sessionId}", 
                     e.GetType().Name, 
-                    e.Message);
+                    e.Message,
+                    sessionId);
+            var session = ctx.Sessions.First(x => x.Id == sessionId);
+            session.Status = SessionStatus.Error;
+            await ctx.SaveChangesAsync();
         }
         
         
