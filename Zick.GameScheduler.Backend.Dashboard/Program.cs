@@ -2,6 +2,8 @@ using System.Runtime.InteropServices;
 using Docker.DotNet;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using Quartz;
 using Quartz.AspNetCore;
 using Zick.GameScheduler.Backend.Dashboard.Common;
@@ -17,6 +19,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenTelemetry();
 builder.Logging.AddOpenTelemetry(opt =>
 {
+    opt.AddOtlpExporter(x =>
+    {
+        x.Protocol = OtlpExportProtocol.Grpc;
+        x.Endpoint = new Uri("http://localhost:4317");
+    });
     opt.IncludeFormattedMessage = true;
     opt.IncludeScopes = true;
 });
@@ -29,6 +36,8 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
         opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
 });
 // CONTAINER SERVICE
+builder.Services.AddScoped<IDockerClient>(_ =>
+    new DockerClientConfiguration(new Uri(Environment.GetEnvironmentVariable("DOCKER_URL")!)).CreateClient());
 // LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();

@@ -8,6 +8,7 @@
         "applicationUrl": "http://localhost:5051",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development",
+          "OTEL_SERVICE_NAME": "Zick.GameScheduler",
           "RACE_DB": "User ID=gamescheduler; Password=gamescheduler; Database=gamescheduler; Host=localhost; Port=5432"
         }
       },

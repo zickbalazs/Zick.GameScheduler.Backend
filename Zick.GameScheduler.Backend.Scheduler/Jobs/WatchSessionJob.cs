@@ -1,22 +1,40 @@
+using Docker.DotNet;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace Zick.GameScheduler.Backend.Scheduler.Jobs;
 
-public class WatchSessionJob(ILogger<WatchSessionJob> logger) : IJob
+public class WatchSessionJob(ILogger<WatchSessionJob> logger,
+    IDockerClient dockerClient) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
         string containerId = context.JobDetail.Description!.Split(':')[1], 
                sessionId = context.JobDetail.Key.Name;
-        logger.LogInformation("watching container {containerId} for session {sessionId}", containerId, sessionId);
+        logger.LogTrace("[session: {sessionId}]: watching container with id {containerId}, repetition count: {watchCount}", 
+            sessionId, 
+            containerId,
+            ((ISimpleTrigger)context.Trigger).TimesTriggered);
+        
+        
+        
+        
 
 
-
-        if (((ISimpleTrigger)context.Trigger).TimesTriggered > 5)
+        if (await CancelConditionSatisfied(context))
         {
             await context.Scheduler.DeleteJob(context.JobDetail.Key);
-            logger.LogInformation("finishing job for {sessionId}, race has ended", sessionId);
+            logger.LogInformation("[session: {sessionId}]: finishing job, race has ended", sessionId);
         }
+    }
+
+
+
+
+
+
+    private async Task<bool> CancelConditionSatisfied(IJobExecutionContext context)
+    {
+        return ((ISimpleTrigger)context.Trigger).TimesTriggered > 5;
     }
 }
