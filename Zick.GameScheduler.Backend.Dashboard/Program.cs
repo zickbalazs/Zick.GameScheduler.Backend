@@ -38,6 +38,8 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
 // CONTAINER SERVICE
 builder.Services.AddScoped<IDockerClient>(_ =>
     new DockerClientConfiguration(new Uri(Environment.GetEnvironmentVariable("DOCKER_URL")!)).CreateClient());
+builder.Services.AddScoped<IPortClaimService, DbPortClaimService>();
+builder.Services.AddScoped<IContainerService, DockerSwarmContainerService>();
 // LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();

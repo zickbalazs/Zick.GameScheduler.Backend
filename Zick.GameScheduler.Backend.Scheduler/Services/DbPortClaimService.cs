@@ -14,25 +14,31 @@ public class DbPortClaimService(ApplicationContext<RacingUserIdentity> ctx,
 {
     public async Task<string> ClaimPortForSession(Guid id)
     {
-        var claimsInUse = ctx.Sessions
-            .Include(x => x.PortClaim)
-            .Where(x=>x.PortClaim != null && x.PortClaim.IsInUse)
-            .Select(x=>x.PortClaim).ToList();
+        var claimsInUse = ctx.PortClaims.Where(x => x.IsInUse);
 
+        var httpPorts = claimsInUse.Select(x => int.Parse(x.ClaimedHttpPort));
+        var serverPorts = claimsInUse.Select(x => int.Parse(x.ClaimedPort));
+        
         var allowedPorts =
-            Enumerable.Range(config.GetValue<int>("Docker:MinPort"), config.GetValue<int>("Docker:MaxPort"))
-                .Except(claimsInUse.Select(x=>int.Parse(x!.ClaimedPort))).ToList();
+            Enumerable.Sequence(config.GetValue<int>("Docker:MinPort"), config.GetValue<int>("Docker:MaxPort"), step: 1)
+                .Except(httpPorts).Except(serverPorts).ToList();
 
         var rolledPort = allowedPorts[RandomNumberGenerator.GetInt32(0, allowedPorts.Count)];
-
+        allowedPorts.Remove(rolledPort);
+        var rolledHttp = allowedPorts[RandomNumberGenerator.GetInt32(0, allowedPorts.Count)];
+        
+        
+        
         ctx.PortClaims.Add(new()
         {
             IsInUse = true,
-            ClaimedPort = $"{rolledPort}"
+            ClaimedPort = $"{rolledPort}",
+            ClaimedHttpPort = $"{rolledHttp}"
         });
+        
         await ctx.SaveChangesAsync();
-        logger.LogInformation("[session {sessionId}]: rolled port {port} for session", id, rolledPort);
-        return $"{rolledPort}";
+        logger.LogInformation("[session {sessionId}]: rolled ports {port} for session", id, rolledPort);
+        return $"{rolledPort};{rolledHttp}";
     }
 
     public async Task EndClaimForSession(Guid id)

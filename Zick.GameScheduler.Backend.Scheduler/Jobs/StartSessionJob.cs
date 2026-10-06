@@ -14,7 +14,15 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
 {
     public async Task Execute(IJobExecutionContext context)
     {
+        Guid sessionId = new Guid(context.JobDetail.Key.Name);
         
-        
+        logger.LogInformation("[startJob | session: {sessionId}]: starting job for session", sessionId);
+        var ports = await portClaimService.ClaimPortForSession(sessionId);
+
+
+
+
+
+
     }
 }
