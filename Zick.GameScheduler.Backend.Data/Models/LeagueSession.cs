@@ -18,6 +18,8 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
     public virtual IList<TUserIdentity> Registrations { get; } = [];
     public virtual League<TUserIdentity> League { get; set; }
     public virtual Track<TUserIdentity>? Track { get; set; }
+    public virtual SessionPortClaim? PortClaim { get; set; }
+    
 
     public static implicit operator SessionDTO(LeagueSession<TUserIdentity> session) => new()
     {
