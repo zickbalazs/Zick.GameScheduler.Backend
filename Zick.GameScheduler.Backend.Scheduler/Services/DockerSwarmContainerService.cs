@@ -8,9 +8,13 @@ public class DockerSwarmContainerService(//IDockerClient client,
     IPortClaimService portClaimService,
     ILogger<DockerSwarmContainerService> logger) : IContainerService
 {
-    public async Task StartContainerForSession(Guid sessionId)
+    public async Task<string> StartContainerForSession(Guid sessionId)
     {
         var ports = (await portClaimService.ClaimPortForSession(sessionId)).Split(';');
+
+
+
+        return "";
     }
 
     public Task StopContainerForSession(Guid sessionId, string containerId)

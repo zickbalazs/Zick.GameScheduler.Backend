@@ -9,17 +9,18 @@ namespace Zick.GameScheduler.Backend.Scheduler.Jobs;
 
 public class StartSessionJob(ILogger<StartSessionJob> logger,
     IContainerService containerService,
+    ISessionStatusUpdateService updateService,
     IPortClaimService portClaimService,
     ISchedulerFactory schedFactory) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
         Guid sessionId = new Guid(context.JobDetail.Key.Name);
-        
+
+        await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);
         logger.LogInformation("[startJob | session: {sessionId}]: starting job for session", sessionId);
         var ports = await portClaimService.ClaimPortForSession(sessionId);
-
-
+        await containerService.StartContainerForSession(sessionId);
 
 
 

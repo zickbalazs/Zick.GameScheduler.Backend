@@ -16,8 +16,8 @@ public class Track<TUserIdentity> : AssettoContent where TUserIdentity : Identit
     public string? CountryCode { get; set; }
 
     // Relations
-    public IList<League<TUserIdentity>> CurrentEvents { get; } = [];
-    public IList<LeagueSession<TUserIdentity>> Sessions { get; } = [];
+    public virtual IList<League<TUserIdentity>> CurrentEvents { get; } = [];
+    public virtual IList<LeagueSession<TUserIdentity>> Sessions { get; } = [];
 
     public static implicit operator TrackDTO(Track<TUserIdentity> track) => new()
     {

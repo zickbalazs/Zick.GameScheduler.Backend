@@ -39,13 +39,13 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
 builder.Services.AddScoped<IDockerClient>(_ =>
     new DockerClientConfiguration(new Uri(Environment.GetEnvironmentVariable("DOCKER_URL")!)).CreateClient());
 builder.Services.AddScoped<IPortClaimService, DbPortClaimService>();
-builder.Services.AddScoped<IContainerService, DockerSwarmContainerService>();
+builder.Services.AddScoped<IContainerService, DockerEngineContainerService>();
 // LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
 builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
 builder.Services.AddScoped<ILeagueService, DbLeagueService>();
-
+builder.Services.AddScoped<ISessionStatusUpdateService, DbSessionStatusUpdateService>();
 // SCHEDULER SERVICES
 builder.Services.AddQuartz(opt =>
 {
@@ -79,8 +79,21 @@ if (app.Environment.IsDevelopment())
 
     var customLeague = ctx.Leagues.FirstOrDefault(x => x.Id == Constants.CustomLeagueId);
     var customClass = ctx.Classes.FirstOrDefault(x => x.Abbreviation == Constants.CustomRacingClass);
+    var firstTrack = ctx.Tracks.FirstOrDefault();
 
-
+    if (firstTrack is null)
+    {
+        var trackEntry = ctx.Tracks.Add(new()
+        {
+            CountryCode = "BEL",
+            Name = "Spa",
+            FolderName = "/content/tracks/ks_spa"
+        });
+        ctx.SaveChanges();
+        firstTrack = trackEntry.Entity;
+        
+    }
+    
     if (customClass is null)
     {
         var classDbEntry = ctx.Classes.Add(new()
@@ -100,8 +113,13 @@ if (app.Environment.IsDevelopment())
             Name = "Custom Racing League",
             Start = DateTime.Now,
             End = DateTime.MaxValue,
-            CurrentTrack = ctx.Tracks.First(),
+            CurrentTrack = firstTrack,
             Interval = TimeSpan.FromDays(365),
+            Practice = new()
+            {
+                DurationInMinutes  = 20,
+                SessionName = "Practice"
+            },
             Qualify = new()
             {
                 DurationInMinutes = 12,
@@ -116,7 +134,11 @@ if (app.Environment.IsDevelopment())
         leagueDbEntry.Entity.Classes.Add(customClass);
         ctx.SaveChanges();
     }
-    
+
+    if (builder.Configuration.GetSection("Docker") is null)
+    {
+        throw new ArgumentNullException();
+    }
     
 }
 

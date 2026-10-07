@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Zick.GameScheduler.Backend.Data;
@@ -29,15 +30,19 @@ public class DbPortClaimService(ApplicationContext<RacingUserIdentity> ctx,
         
         
         
-        ctx.PortClaims.Add(new()
+        var claim = ctx.PortClaims.Add(new()
         {
             IsInUse = true,
             ClaimedPort = $"{rolledPort}",
             ClaimedHttpPort = $"{rolledHttp}"
         });
+
+        ctx.Sessions.Include(x=>x.PortClaim)
+            .First(x => x.Id == id).PortClaim = claim.Entity;
         
         await ctx.SaveChangesAsync();
-        logger.LogInformation("[session {sessionId}]: rolled ports {port} for session", id, rolledPort);
+        logger.LogInformation("[session {sessionId}]: rolled ports {port}:{httpPort} for session", 
+            id, rolledPort, rolledHttp);
         return $"{rolledPort};{rolledHttp}";
     }
 
@@ -57,5 +62,27 @@ public class DbPortClaimService(ApplicationContext<RacingUserIdentity> ctx,
         claimEntry.IsInUse = false;
         await ctx.SaveChangesAsync();
         logger.LogInformation("[session {sessionId}]: marking session claim port: {port} as not used", id, claimEntry.ClaimedPort);
+    }
+
+    public async Task<string> GetPortsForSession(Guid id)
+    {
+        var dbEntry = await ctx.Sessions
+            .Include(x => x.PortClaim)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+
+
+        if (dbEntry is null || dbEntry.PortClaim is null)
+        {
+            logger.LogError("port claim for session: {sessionId} is not found, check logs", id);
+            throw new InvalidOperationException();
+        }
+
+        string serverPort = dbEntry.PortClaim.ClaimedPort, 
+               httpPort = dbEntry.PortClaim.ClaimedHttpPort;
+
+
+        return $"{serverPort};{httpPort}";
+
     }
 }

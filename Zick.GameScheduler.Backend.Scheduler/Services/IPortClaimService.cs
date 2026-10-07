@@ -4,4 +4,5 @@ public interface IPortClaimService
 {
     Task<string> ClaimPortForSession(Guid id);
     Task EndClaimForSession(Guid id);
+    Task<string> GetPortsForSession(Guid id);
 }
