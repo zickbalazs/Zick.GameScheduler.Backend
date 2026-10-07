@@ -18,6 +18,7 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
     public virtual IList<TUserIdentity> Registrations { get; } = [];
     public virtual League<TUserIdentity> League { get; set; }
     public virtual Track<TUserIdentity>? Track { get; set; }
+    public virtual IList<SessionResult<TUserIdentity>> Results { get; } = [];
     public virtual SessionPortClaim? PortClaim { get; set; }
     
 

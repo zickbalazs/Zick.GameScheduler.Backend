@@ -9,6 +9,7 @@
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development",
           "OTEL_SERVICE_NAME": "Zick.GameScheduler",
+          "DOCKER_URL": "unix:///var/run/docker.sock",
           "RACE_DB": "User ID=gamescheduler; Password=gamescheduler; Database=gamescheduler; Host=localhost; Port=5432"
         }
       },

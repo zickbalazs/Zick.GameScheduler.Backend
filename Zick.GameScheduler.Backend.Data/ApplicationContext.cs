@@ -15,6 +15,8 @@ public class ApplicationContext<TUserIdentity>(DbContextOptions options)
     public DbSet<League<TUserIdentity>> Leagues { get; set; }
     public DbSet<LeagueSession<TUserIdentity>> Sessions { get; set; }
     public DbSet<SessionPortClaim> PortClaims { get; set; }
+    public DbSet<SessionResult<TUserIdentity>> Results { get; set; }
+    public DbSet<SessionResultDetails<TUserIdentity>> ResultDetails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

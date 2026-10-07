@@ -16,7 +16,14 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Zick.GameScheduler.Backend.Data\Zick.GameScheduler.Backend.Data.csproj" />
+      <ProjectReference Include="..\Zick.GameScheduler.Backend.ResultConsumer\Zick.GameScheduler.Backend.ResultConsumer.csproj" />
       <ProjectReference Include="..\Zick.GameScheduler.Backend.Scheduler\Zick.GameScheduler.Backend.Scheduler.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="resultExample.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
