@@ -15,7 +15,7 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
     public DateTime Start { get; set; }
 
     // Relations
-    public virtual IList<TUserIdentity> Registrations { get; } = [];
+    public virtual IList<SessionRegistration<TUserIdentity>> Registrations { get; } = [];
     public virtual League<TUserIdentity> League { get; set; }
     public virtual Track<TUserIdentity>? Track { get; set; }
     public virtual IList<SessionResult<TUserIdentity>> Results { get; } = [];
@@ -26,7 +26,7 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
     {
         Id = session.Id,
         Start = session.Start,
-        RegistrationIds = [ ..session.Registrations.Select(x=>x.Id) ],
+        RegistrationIds = [ ..session.Registrations.Select(x=>x.User.Id) ],
         LeagueId = session.League.Id,
         TrackId = session.Track?.Id
     };

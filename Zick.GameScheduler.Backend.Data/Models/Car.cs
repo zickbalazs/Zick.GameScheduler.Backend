@@ -15,6 +15,7 @@ public class Car<TUserIdentity> : AssettoContent where TUserIdentity : IdentityU
     
     // Relations
     public virtual IList<RacingClass<TUserIdentity>> Classes { get; } = [];
+    public virtual IList<SessionRegistration<TUserIdentity>> Registrations { get; } = [];
 
     public static implicit operator CarDTO(Car<TUserIdentity> car) => new()
     {

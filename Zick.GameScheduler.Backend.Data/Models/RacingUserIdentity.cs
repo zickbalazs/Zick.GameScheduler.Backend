@@ -7,5 +7,5 @@ public class RacingUserIdentity : IdentityUser
     public string? SteamId { get; set; }
     
     // Relations
-    public IList<LeagueSession<RacingUserIdentity>> Sessions { get; } = [];
+    public IList<LeagueSession<RacingUserIdentity>> Registrations { get; } = [];
 }

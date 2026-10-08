@@ -11,6 +11,7 @@ using Zick.GameScheduler.Backend.Dashboard.Components;
 using Zick.GameScheduler.Backend.Dashboard.Services;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
+using Zick.GameScheduler.Backend.EntryListGenerator;
 using Zick.GameScheduler.Backend.ResultConsumer;
 using Zick.GameScheduler.Backend.Scheduler.Services;
 
@@ -71,6 +72,7 @@ builder.Services.AddQuartzServer(opt =>
 });
 builder.Services.AddScoped<ISessionSchedulerService, QuartzSchedulerService>();
 builder.Services.AddScoped<ISessionService, DbSessionService>();
+builder.Services.AddScoped<IEntryGenerator<RacingUserIdentity>, DbEntryGenerator>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -146,7 +148,6 @@ if (app.Environment.IsDevelopment())
     }
     
 }
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
