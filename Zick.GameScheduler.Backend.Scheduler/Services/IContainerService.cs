@@ -5,5 +5,4 @@ public interface IContainerService
     Task<string> StartContainerForSession(Guid sessionId);
     Task StopContainerForSession(Guid sessionId, string containerId);
     Task RecoverContainerForSession(Guid sessionId, string containerId);
-    Task CreateEntryListForSession(Guid sessionId, string entryListContents);
 }

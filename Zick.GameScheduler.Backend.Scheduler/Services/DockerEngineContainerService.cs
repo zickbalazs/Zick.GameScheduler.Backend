@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
-using Zick.GameScheduler.Backend.EntryListGenerator;
+using Zick.GameScheduler.Services.Generators;
 
 namespace Zick.GameScheduler.Backend.Scheduler.Services;
 

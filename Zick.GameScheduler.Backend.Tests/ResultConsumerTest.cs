@@ -4,8 +4,8 @@ using Microsoft.VisualBasic.CompilerServices;
 using Moq;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
-using Zick.GameScheduler.Backend.ResultConsumer;
-using Zick.GameScheduler.Backend.ResultConsumer.Utils;
+using Zick.GameScheduler.Services.Generators;
+using Zick.GameScheduler.Services.Utils;
 using Range = System.Range;
 
 namespace Zick.GameScheduler.Backend.Tests;
