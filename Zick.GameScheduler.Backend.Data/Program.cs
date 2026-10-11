@@ -8,6 +8,7 @@ namespace Zick.GameScheduler.Backend.Data;
 
 public class Program
 {
+    
     public static void Main(string[] args)
     {
         var builder = new HostApplicationBuilder(args);
@@ -25,7 +26,6 @@ public class Program
                 opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
             });    
         }
-
         var app = builder.Build();
         
         app.Run();

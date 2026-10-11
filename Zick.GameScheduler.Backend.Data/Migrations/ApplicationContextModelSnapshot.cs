@@ -435,7 +435,7 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SessionRegistration<RacingUserIdentity>");
+                    b.ToTable("Registrations");
                 });
 
             modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionResult<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
