@@ -27,6 +27,7 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
         Id = session.Id,
         Start = session.Start,
         RegistrationIds = [ ..session.Registrations.Select(x=>x.User.Id) ],
+        Status = session.Status,
         LeagueId = session.League.Id,
         TrackId = session.Track?.Id
     };

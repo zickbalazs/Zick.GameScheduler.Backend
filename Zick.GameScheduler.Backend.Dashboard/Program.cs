@@ -16,6 +16,10 @@ using Zick.GameScheduler.Services.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// TODO LIST:
+// - Logging (page data)
+// - switch out DbContext to DbContextFactory for thread safety
+
 // Add services to the container.
 builder.Services.AddOpenTelemetry();
 builder.Logging.AddOpenTelemetry(opt =>

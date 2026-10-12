@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Zick.GameScheduler.Backend.API.Hubs;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
+using Zick.GameScheduler.Services.API;
 using Zick.GameScheduler.Services.ServicesAPI;
 
 // TODO List:
@@ -26,6 +28,7 @@ builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
@@ -48,8 +51,12 @@ builder.Services.AddScoped<ILeagueService, DbLeagueService>();
 builder.Services.AddScoped<IResultService, DbResultService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
 
+// AUTH
 builder.Services.AddIdentityApiEndpoints<RacingUserIdentity>()
     .AddEntityFrameworkStores<ApplicationContext<RacingUserIdentity>>();
+
+// SIGNALR
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -62,6 +69,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapIdentityApi<RacingUserIdentity>();
+app.MapHub<RegistrationHub>("/hubs/reg");
 app.MapControllers();
 
 app.UseHttpsRedirection();

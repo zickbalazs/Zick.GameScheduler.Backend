@@ -1,34 +1,51 @@
 using Microsoft.AspNetCore.Mvc;
+using Zick.GameScheduler.Backend.API.Utils;
+using Zick.GameScheduler.Backend.Data.DTOs;
 using Zick.GameScheduler.Services.ServicesAPI;
 
 namespace Zick.GameScheduler.Backend.API.Controllers;
 
+// TODO: Logging
+
 [ApiController]
 [Route("[controller]")]
-public class VehicleController(IVehicleService vehicleService) : ControllerBase
+public class VehicleController(ILogger<VehicleController> logger, IVehicleService vehicleService) : ControllerBase
 {
 
     [HttpGet("class/{classId}")]
-    public async Task<IActionResult> GetClassVehicles(string classId)
+    public async Task<ActionResult<CarDTO>> GetClassVehicles(string classId)
     {
         try
         {
-            return Ok(await vehicleService.GetCarsByClass(classId));
+            var cars = await vehicleService.GetCarsByClass(classId);
+            logger.LogInformation("[GET /class/id]: sent {carCount} cars with class {class} for {ip}", 
+                cars.Count,
+                classId,
+                HttpContext.Connection.RemoteIpAddress);
+            return Ok(cars);
         }
         catch (Exception e)
         {
-            if (e is ArgumentNullException or InvalidOperationException)
-            {
-                ModelState.AddModelError("classId", "Class with this abbreviation is not found!");
-                return ValidationProblem();
-            }
-            return StatusCode(500, "A database error has occured!");
+            var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(error.Code, error.Message);
         }
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetVehicles()
+    public async Task<ActionResult<CarDTO>> GetVehicles()
     {
-        return Ok(await vehicleService.GetCars());
+        try
+        {
+            var cars = await vehicleService.GetCars();
+            logger.LogInformation("[GET /]: sent {carCount} for {ip}",
+                cars.Count,
+                HttpContext.Connection.RemoteIpAddress);
+            return Ok(cars);
+        }
+        catch (Exception e)
+        {
+            var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(error.Code, error.Message);
+        }
     }
 }
