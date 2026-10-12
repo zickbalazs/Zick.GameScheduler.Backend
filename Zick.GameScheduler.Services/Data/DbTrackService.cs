@@ -1,32 +1,89 @@
+using System.Data;
+using Microsoft.EntityFrameworkCore;
+using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Dashboard.Forms;
 using Zick.GameScheduler.Backend.Data.DTOs;
+using Zick.GameScheduler.Backend.Data.Models;
 
 namespace Zick.GameScheduler.Services.Data;
 
-public class DbTrackService : ITrackService
+public class DbTrackService(IDbContextFactory<ApplicationContext<RacingUserIdentity>> ctxFactory) : ITrackService
 {
-    public Task AddTrack(AddTrackForm form)
+    public async Task AddTrack(AddTrackForm form)
     {
-        throw new NotImplementedException();
+        Track<RacingUserIdentity> trackEntry = new()
+        {
+            FolderName = form.Folder,
+            Name = form.Name,
+            CountryCode = form.CountryCode
+        };
+
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            var trackWithFolder = ctx.Tracks.Any(x => x.FolderName == form.Folder);
+            if (trackWithFolder)
+                throw new DuplicateNameException("Track with this folder name already exists");
+
+            ctx.Tracks.Add(trackEntry);
+            await ctx.SaveChangesAsync();
+        }
     }
 
-    public Task EditTrack(EditTrackForm form)
+    public async Task EditTrack(EditTrackForm form)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            if (ctx.Tracks.Where(x => x.Id != form.Id).Any(x => x.FolderName == form.Folder))
+                throw new DuplicateNameException("Folder name must be unique for the track");
+
+            var trackEntry = ctx.Tracks.First(x => x.Id == form.Id);
+
+            trackEntry.FolderName = form.Folder;
+            trackEntry.Name = form.Name;
+            trackEntry.CountryCode = form.CountryCode;
+
+            await ctx.SaveChangesAsync();
+        }
     }
 
-    public Task DeleteTrack(Guid id)
+    public async Task DeleteTrack(Guid id)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            if (ctx.Tracks.Count() < 2)
+                throw new NotSupportedException("There must be at least one more track to delete this one.");
+
+            var trackEntry = ctx.Tracks.First(x => x.Id == id);
+            var firstTrack = ctx.Tracks.First(x => x.Id != id);
+
+            var leaguesUsingTrack = await ctx.Leagues
+                .Include(m => m.CurrentTrack)
+                .Where(x => x.CurrentTrack.Id == id)
+                .ToListAsync();
+
+            foreach (var track in leaguesUsingTrack)
+            {
+                track.CurrentTrack = firstTrack;
+                firstTrack.CurrentEvents.Add(track);
+            }
+            ctx.Tracks.Remove(trackEntry);
+            await ctx.SaveChangesAsync();
+        }
     }
 
-    public Task<IList<TrackDTO>> GetTracks()
+    public async Task<IList<TrackDTO>> GetTracks()
     {
-        throw new NotImplementedException();
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            return [ ..ctx.Tracks ];
+        }
     }
 
-    public Task<TrackDTO> GetTrack(Guid id)
+    public async Task<TrackDTO> GetTrack(Guid id)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            return await ctx.Tracks.FirstAsync(x => x.Id == id);
+        }
     }
 }
