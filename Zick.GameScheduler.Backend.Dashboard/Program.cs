@@ -8,12 +8,17 @@ using Quartz;
 using Quartz.AspNetCore;
 using Zick.GameScheduler.Backend.Dashboard.Common;
 using Zick.GameScheduler.Backend.Dashboard.Components;
-using Zick.GameScheduler.Backend.Dashboard.Services;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
+using Zick.GameScheduler.Services.Generators;
 using Zick.GameScheduler.Backend.Scheduler.Services;
+using Zick.GameScheduler.Services.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// TODO LIST:
+// - Logging (page data)
+// - switch out DbContext to DbContextFactory for thread safety
 
 // Add services to the container.
 builder.Services.AddOpenTelemetry();
@@ -35,17 +40,21 @@ builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
     else
         opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
 });
+
 // CONTAINER SERVICE
 builder.Services.AddScoped<IDockerClient>(_ =>
     new DockerClientConfiguration(new Uri(Environment.GetEnvironmentVariable("DOCKER_URL")!)).CreateClient());
 builder.Services.AddScoped<IPortClaimService, DbPortClaimService>();
-builder.Services.AddScoped<IContainerService, DockerEngineContainerService>();
+builder.Services.AddScoped<IContainerService, DockerSwarmContainerService>();
+builder.Services.AddScoped<IResultConsumerService, DbResultConsumerService>();
+
 // LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
 builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
 builder.Services.AddScoped<ILeagueService, DbLeagueService>();
 builder.Services.AddScoped<ISessionStatusUpdateService, DbSessionStatusUpdateService>();
+
 // SCHEDULER SERVICES
 builder.Services.AddQuartz(opt =>
 {
@@ -66,6 +75,7 @@ builder.Services.AddQuartzServer(opt =>
 });
 builder.Services.AddScoped<ISessionSchedulerService, QuartzSchedulerService>();
 builder.Services.AddScoped<ISessionService, DbSessionService>();
+builder.Services.AddScoped<IEntryGenerator<RacingUserIdentity>, DbEntryGenerator>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -87,7 +97,7 @@ if (app.Environment.IsDevelopment())
         {
             CountryCode = "BEL",
             Name = "Spa",
-            FolderName = "/content/tracks/ks_spa"
+            FolderName = "spa"
         });
         ctx.SaveChanges();
         firstTrack = trackEntry.Entity;
@@ -141,7 +151,6 @@ if (app.Environment.IsDevelopment())
     }
     
 }
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

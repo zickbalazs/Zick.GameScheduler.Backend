@@ -23,7 +23,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Zick.GameScheduler.Backend.Data\Zick.GameScheduler.Backend.Data.csproj" />
+        <ProjectReference Include="..\Zick.GameScheduler.Backend.Data\Zick.GameScheduler.Backend.Data.csproj" />
+        <ProjectReference Include="..\Zick.GameScheduler.Services\Zick.GameScheduler.Services.csproj" />
     </ItemGroup>
 
 </Project>

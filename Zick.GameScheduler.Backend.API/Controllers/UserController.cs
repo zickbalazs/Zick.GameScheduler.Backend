@@ -1,0 +1,55 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Zick.GameScheduler.Backend.Data.Models;
+
+namespace Zick.GameScheduler.Backend.API.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class UserController(ILogger<UserController> logger, UserManager<RacingUserIdentity> userManager) : ControllerBase
+{
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterUser([FromBody] RegistrationBody data)
+    {
+        try
+        {
+            var result = await userManager.CreateAsync(new()
+            {
+                UserName = data.UserName,
+                Email = data.Email,
+                EmailConfirmed = true,
+                TwoFactorEnabled = false,
+                LockoutEnabled = false,
+                SteamId = data.SteamID
+            }, data.Password);
+
+            if (result.Succeeded)
+            {
+                logger.LogInformation("[/register]: new user registered to db from {ip}",
+                    HttpContext.Connection.RemoteIpAddress);
+                return Ok();
+            }
+
+            result.Errors.ToList().ForEach(x => ModelState.AddModelError(x.Code, x.Description));
+            return ValidationProblem();
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[/register]: an error has occured with:\nmessage: {message}\nstack: {stack}",
+                e.Message,
+                e.StackTrace);
+            return StatusCode(500, "A server error has occured, contact the administrators!");
+        }
+    }
+}
+
+
+public class RegistrationBody
+{
+    [EmailAddress]
+    public string Email { get; set; }
+    public string UserName { get; set; }
+    public string Password { get; set; }
+    public string SteamID { get; set; }
+}
