@@ -36,6 +36,7 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
 
 public enum SessionStatus
 {
+    Created,
     Waiting,
     Starting,
     Underway,

@@ -5,7 +5,7 @@ using Zick.GameScheduler.Backend.Scheduler.Services;
 
 namespace Zick.GameScheduler.Backend.Scheduler.Jobs;
 
-public class WatchSessionJob(ILogger<WatchSessionJob> logger, IContainerService containerService) : IJob
+public class WatchSessionJob(ILogger<WatchSessionJob> logger) : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {

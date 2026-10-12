@@ -41,6 +41,7 @@ public class DbPortClaimService(ApplicationContext<RacingUserIdentity> ctx,
             .First(x => x.Id == id).PortClaim = claim.Entity;
         
         await ctx.SaveChangesAsync();
+        
         logger.LogInformation("[session {sessionId}]: rolled ports {port}:{httpPort} for session", 
             id, rolledPort, rolledHttp);
         return $"{rolledPort};{rolledHttp}";
