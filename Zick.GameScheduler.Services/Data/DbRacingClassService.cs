@@ -6,109 +6,65 @@ using Zick.GameScheduler.Backend.Data.Models;
 
 namespace Zick.GameScheduler.Services.Data;
 
-public class DbRacingClassService(ApplicationContext<RacingUserIdentity> ctx) : IRacingClassService
+public class DbRacingClassService(IDbContextFactory<ApplicationContext<RacingUserIdentity>> ctxFactory) : IRacingClassService
 {
-    public async Task<(bool Success, string Reason)> DeleteClass(string id)
+    public async Task DeleteClass(string id)
     {
-        try
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
         {
-            var rClass = await ctx.Classes
-                .Include(x => x.Leagues)
-                .FirstAsync(m => m.Abbreviation == id);
-            
-            int classInLeagues = rClass.Leagues.Count;
-
-            if (classInLeagues > 0) throw new Exception("This class is currently used in at least 1 league");
-
-            ctx.Classes.Remove(rClass);
-            int rowsAffected = await ctx.SaveChangesAsync();
-
-            return (rowsAffected > 0, rowsAffected > 0 ? "" : "Nothing was deleted!");
-        }
-        catch (Exception e)
-        {
-            return (false, e.Message);
+            var entry = await ctx.Classes
+                .FirstAsync(x => x.Abbreviation == id);
+            ctx.Classes.Remove(entry);
+            await ctx.SaveChangesAsync();
         }
     }
 
-    public async Task<(bool Success, string Reason)> ModifyClass(EditRacingClassForm form)
+    public Task ModifyClass(EditRacingClassForm form)
     {
-        try
-        {
-            var rClass = await ctx.Classes
-                .Include(x => x.Cars)
-                .FirstAsync(m => m.Abbreviation == form.Identifier);
-
-            // Clean cars
-            rClass.Cars.Clear();
-            // Add cars that are set now
-            var selectedCars = ctx.Cars.Where(x=>form.Cars.Select(b=>b.Id).Contains(x.Id));
-
-            foreach (var car in selectedCars)
-            {
-                rClass.Cars.Add(car);
-            }            
-            
-            rClass.Name = form.Name;
-            rClass.Color = form.Color;
-            
-            int rowsAffected = await ctx.SaveChangesAsync();
-            return (rowsAffected > 0, rowsAffected > 0 ? "" : "Nothing was updated!");
-        }
-        catch (Exception e)
-        {
-            return (false, e.Message);
-        }
+        throw new NotImplementedException();
     }
 
     public async Task<IList<RacingClassDTO>> GetClasses()
     {
-        return await ctx.Classes
-            .Include(x => x.Cars)
-            .Select(y => (RacingClassDTO)y)
-            .ToListAsync();
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            var raceClasses = ctx.Classes
+                .Include(x => x.Cars);
+            return [ ..raceClasses ];
+        }
     }
 
     public async Task<RacingClassDTO> GetClass(string id)
     {
-        return await ctx.Classes
-            .Include(m=>m.Cars)
-            .FirstAsync(x => x.Abbreviation == id);
-    }
-
-    public async Task<(bool Success, string Reason)> AddClass(AddRacingClassForm form)
-    {
-        if (form.Cars.Count < 1)
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
         {
-            return (false, "At least one car must be added for a racing class!");
+            var raceClass = await ctx.Classes
+                .Include(m=>m.Cars)
+                .FirstAsync(x => x.Abbreviation == id);
+            return raceClass;
         }
-        try
+    }
+    
+    public async Task AddClass(AddRacingClassForm form)
+    {
+        var formCars = form.Cars.Select(x => new Car<RacingUserIdentity>()
         {
-            var entry = new RacingClass<RacingUserIdentity>()
+            Id = x.Id,
+            Manufacturer = x.Manufacturer,
+            Model = x.Model,
+            FolderName = x.FolderName
+        }).ToList();
+        
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            var newClass = ctx.Classes.Add(new()
             {
                 Abbreviation = form.Identifier,
-                Color = form.Color,
                 Name = form.Name,
-            };
-
-            var carDbEntries = ctx.Cars
-                .Where(m => form.Cars.Select(h => h.Id)
-                .Contains(m.Id));
-
-            ctx.Add(entry);
-            
-            foreach (var car in carDbEntries)
-            {
-                entry.Cars.Add(car);
-                car.Classes.Add(entry);
-            }
-            
+                Color = form.Color
+            });
+            formCars.ForEach(newClass.Entity.Cars.Add);
             await ctx.SaveChangesAsync();
-            return (true, "");
-        }
-        catch (Exception e)
-        {
-            return (false, e.Message);
         }
     }
 }

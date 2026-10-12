@@ -26,4 +26,25 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\Pages\Debug\CreateSessionTest.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Debug\TestResultConsume.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\League\AddRacingLeague.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\League\EditRacingLeague.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\League\ManageRacingLeagues.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\RacingClass\AddRacingClass.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\RacingClass\EditRacingClass.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\RacingClass\ManageRacingClasses.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Sessions\AddCustomSession.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Sessions\EditCustomSession.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Sessions\ManageCustomSessions.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Sessions\ManageLeagueSessions.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Track\AddTrack.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Track\EditTrack.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Track\ManageTracks.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Vehicle\AddVehicle.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Vehicle\EditVehicle.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Vehicle\ManageVehicles.razor" />
+    </ItemGroup>
+
 </Project>

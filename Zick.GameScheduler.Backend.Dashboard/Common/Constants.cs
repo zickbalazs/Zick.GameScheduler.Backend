@@ -19,13 +19,13 @@ public static class Constants
                 {
                     Name = "Add Vehicle",
                     Icon = MudBlazor.Icons.Material.Filled.Add,
-                    Href = "/vehicles/new"
+                    Href = "/vehicles/add"
                 },
                 new()
                 {
-                    Name = "Edit Vehicles",
+                    Name = "List Vehicles",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/vehicles/edit"
+                    Href = "/vehicles/overview"
                 }
             ]
         },
@@ -42,9 +42,9 @@ public static class Constants
                 },
                 new()
                 {
-                    Name = "Edit Tracks",
+                    Name = "List Tracks",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/tracks/edit"
+                    Href = "/tracks/overview"
                 }
             ]
         },
@@ -61,9 +61,9 @@ public static class Constants
                 },
                 new()
                 {
-                    Name = "Edit Leagues",
+                    Name = "List Leagues",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/leagues/edit"
+                    Href = "/leagues/overview"
                 }
             ]
         },
@@ -82,7 +82,7 @@ public static class Constants
                 {
                     Name = "Manage Classes",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/classes/edit"
+                    Href = "/classes/overview"
                 }
             ]
         },
@@ -101,13 +101,13 @@ public static class Constants
                 {
                     Name = "Manage League Sessions",
                     Icon = MudBlazor.Icons.Material.Filled.ManageAccounts,
-                    Href = "/sessions/edit/league"
+                    Href = "/sessions/overview/league"
                 },
                 new()
                 {
                     Name = "Manage Custom Sessions",
                     Icon = MudBlazor.Icons.Material.Filled.ManageAccounts,
-                    Href = "/sessions/edit/custom"
+                    Href = "/sessions/overview/custom"
                 }
             ]
         }

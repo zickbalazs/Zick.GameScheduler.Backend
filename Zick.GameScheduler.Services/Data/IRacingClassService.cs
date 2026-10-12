@@ -5,9 +5,9 @@ namespace Zick.GameScheduler.Services.Data;
 
 public interface IRacingClassService
 {
-    Task<(bool Success, string Reason)> DeleteClass(string id);
-    Task<(bool Success, string Reason)> ModifyClass(EditRacingClassForm form);
+    Task DeleteClass(string id);
+    Task ModifyClass(EditRacingClassForm form);
     Task<IList<RacingClassDTO>> GetClasses();
     Task<RacingClassDTO> GetClass(string id);
-    Task<(bool Success, string Reason)> AddClass(AddRacingClassForm form);
+    Task AddClass(AddRacingClassForm form);
 }

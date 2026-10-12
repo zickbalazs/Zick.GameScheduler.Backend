@@ -32,7 +32,7 @@ builder.Logging.AddOpenTelemetry(opt =>
     opt.IncludeFormattedMessage = true;
     opt.IncludeScopes = true;
 });
-builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
+builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
     if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");

@@ -1,0 +1,70 @@
+@page "/vehicles/overview"
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject IVehicleService VehicleService
+@inject NavigationManager NavManager
+@inject ISnackbar SnackbarService
+
+<PageTitle>ZGS | Manage Cars</PageTitle>
+<TitleComponent Title="Manage Cars"/>
+
+<MudTable T="CarDTO" Items="@Cars">
+    <HeaderContent>
+        <MudTh>Identifier</MudTh>
+        <MudTh>Car Model</MudTh>
+        <MudTh>Car Manufacturer</MudTh>
+        <MudTh>Folder Name</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@(context.Id.ToString().Substring(0, 8))...</MudTd>
+        <MudTd>@context.Model</MudTd>
+        <MudTd>@context.Manufacturer</MudTd>
+        <MudTd>@context.FolderName</MudTd>
+        <MudTd>
+            <MudButton StartIcon="@Icons.Material.Filled.Edit" 
+                       Color="Color.Warning"
+                       Variant="Variant.Filled"
+                       @onclick="()=>GoToEdit(context.Id)"
+                       Disabled="@ButtonsLocked">Edit</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Delete"
+                       Color="Color.Error"
+                       Variant="Variant.Filled"
+                       @onclick="()=>Delete(context.Id)"
+                       Disabled="@ButtonsLocked">Delete</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+
+@code {
+    IList<CarDTO> Cars { get; set; } = [];
+    bool ButtonsLocked { get; set; }
+
+    async Task Delete(Guid id)
+    {
+        try
+        {
+            ButtonsLocked = true;
+            await VehicleService.DeleteVehicle(id);
+            Cars = [.. Cars.Where(x => x.Id != id)];
+            ButtonsLocked = false;
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+
+    void GoToEdit(Guid id)
+    {
+        NavManager.NavigateTo($"/vehicles/edit/{id}");
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Cars = await VehicleService.GetVehicles();
+        await base.OnInitializedAsync();
+    }
+
+}
