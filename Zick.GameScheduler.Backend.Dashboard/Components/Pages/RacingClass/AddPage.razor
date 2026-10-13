@@ -1,0 +1,142 @@
+@page "/classes/add"
+@using System.Security.Cryptography
+@using Zick.GameScheduler.Backend.Data.Dashboard.Forms
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject IRacingClassService ClassService
+@inject IVehicleService CarService
+@inject ISnackbar SnackbarService
+@inject NavigationManager NavManager
+
+<PageTitle>ZGS | Add class</PageTitle>
+<TitleComponent Title="Add new racing class" />
+
+<MudForm>
+    
+    <MudGrid Class="mb-3">
+        <MudItem>
+            <MudTextField T="string"
+                          @bind-Value="Form.Identifier"
+                          Label="Identifier"
+                          Placeholder="GT5"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem>
+            <MudTextField T="string"
+                          @bind-Value="Form.Name"
+                          Label="Name"
+                          Placeholder="Grand Touring 3"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem>
+            <MudTextField T="string?"
+                          @bind-Value="Form.Color"
+                          Label="Color"
+                          Placeholder="#ffffab"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem>
+            
+            <MudSelect @bind-Value="SelectedItem" Label="Add Car">
+                @foreach (var car in Cars)
+                {
+                    <MudSelectItem Value="car" T="CarDTO">@($"{car.Manufacturer} {car.Model}".Trim())</MudSelectItem>
+                }
+            </MudSelect>
+            
+        </MudItem>
+        <MudItem>
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                           Color="Color.Primary"
+                           Disabled="CannotAdd"
+                           @onclick="AddCar"/>    
+        </MudItem>
+    </MudGrid>
+    <MudText Class="mb-3">Added cars:</MudText>
+    <MudGrid Class="mb-3">
+        @if (Form.Cars.Count <= 0)
+        {
+            <MudItem><MudText>no cars added yet.</MudText></MudItem>
+        }
+        else
+        {
+            @foreach (var car in Form.Cars)
+            {
+                <MudItem>
+                    <MudChip T="CarDTO"
+                             CloseIcon="@Icons.Material.Filled.Close"
+                             Color="GenerateColor()"
+                             OnClose="() => RemoveCar(car)">@($"{car.Manufacturer} {car.Model}".Trim())</MudChip>
+                </MudItem>
+            }
+        }
+    </MudGrid>
+    <MudGrid>
+        <MudItem><MudButton StartIcon="@Icons.Material.Filled.Done"
+                            Variant="Variant.Outlined"
+                            Color="Color.Primary"
+                            @onclick="Submit">Submit</MudButton></MudItem>
+    </MudGrid>
+</MudForm>
+
+
+@code {
+
+    AddRacingClassForm Form { get; } = new()
+    {
+        Cars = [],
+        Identifier = "",
+        Color = null,
+        Name = ""
+    };
+
+    bool CannotAdd { get => SelectedItem == null; }
+    
+    IEnumerable<CarDTO> Cars { get; set; } = [];
+    CarDTO? SelectedItem { get; set; }
+    
+    async Task Submit()
+    {
+        try
+        {
+            await ClassService.AddClass(Form);
+            NavManager.NavigateTo("/classes/overview");
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+    
+    void AddCar()
+    {
+        if (SelectedItem != null)
+        {
+            Form.Cars.Add(SelectedItem);
+            SelectedItem = null;
+        }
+        
+    }
+
+    Color GenerateColor()
+    {
+        return (Color)RandomNumberGenerator.GetInt32(0, 12);
+    }
+
+    void RemoveCar(CarDTO car)
+    {
+        Cars = [car, .. Cars];
+        Form.Cars.Remove(car);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Cars = await CarService.GetVehicles();
+        await base.OnInitializedAsync();
+    }
+
+
+}

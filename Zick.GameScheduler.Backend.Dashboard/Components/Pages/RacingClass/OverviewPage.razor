@@ -1,0 +1,65 @@
+@page "/classes/overview"
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject IRacingClassService ClassService
+@inject ISnackbar SnackbarService
+@inject NavigationManager NavManager
+
+<PageTitle>ZGS | Manage Classes</PageTitle>
+<TitleComponent Title="Manage Classes"/>
+
+<MudTable T="RacingClassDTO" Items="RacingClasses">
+    <HeaderContent>
+        <MudTh>Abbreviation</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Color</MudTh>
+        <MudTh>Cars in class</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Abbreviation</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.Color</MudTd>
+        <MudTd>@context.Cars.Count</MudTd>
+        <MudTd>
+            <MudButton StartIcon="@Icons.Material.Filled.Edit"
+                       Color="Color.Warning"
+                       Variant="Variant.Filled"
+                       OnClick="()=>EditClass(context.Abbreviation)">Edit</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Delete"
+                       Color="Color.Error"
+                       Variant="Variant.Filled"
+                       OnClick="()=>DeleteClass(context.Abbreviation)">Delete</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    IEnumerable<RacingClassDTO> RacingClasses { get; set; } = [];
+
+
+    async Task DeleteClass(string abbr)
+    {
+        try
+        {
+            await ClassService.DeleteClass(abbr);
+            RacingClasses = RacingClasses.Where(x => x.Abbreviation != abbr);
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+
+    void EditClass(string abbr)
+    {
+        NavManager.NavigateTo($"/classes/edit/{abbr}");
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        RacingClasses = await ClassService.GetClasses();
+        await base.OnInitializedAsync();
+    }
+
+}

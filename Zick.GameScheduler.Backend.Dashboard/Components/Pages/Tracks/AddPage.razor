@@ -8,7 +8,7 @@
 <PageTitle>ZGS | Add track</PageTitle>
 <TitleComponent Title="Add new track"/>
 
-<MudForm>
+<MudForm @bind="FormElement">
     <MudGrid Class="mb-3">
         <MudItem xs="12" md="8">
             <MudTextField T="string"
@@ -45,9 +45,9 @@
 
 @code {
     AddTrackForm Form { get; } = new();
-
+    MudForm FormElement { get; set; }
     async Task Submit()
-    {
+    {  
         try
         {
             await TrackService.AddTrack(Form);

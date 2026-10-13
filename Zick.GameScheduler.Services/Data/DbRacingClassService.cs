@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Dashboard.Forms;
@@ -57,6 +58,9 @@ public class DbRacingClassService(IDbContextFactory<ApplicationContext<RacingUse
         
         await using (var ctx = await ctxFactory.CreateDbContextAsync())
         {
+            if (ctx.Classes.Any(x => x.Abbreviation == form.Identifier))
+                throw new DuplicateNameException("The class' identifier must be unique!");
+            
             var newClass = ctx.Classes.Add(new()
             {
                 Abbreviation = form.Identifier,
