@@ -1,0 +1,85 @@
+@page "/leagues/overview"
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject ILeagueService LeagueService
+@inject NavigationManager Nav
+@inject ISnackbar SnackbarService
+
+<PageTitle>ZGS | Manage Leagues</PageTitle>
+<TitleComponent Title="Manage Leagues"/>
+
+<MudTable T="LeagueDTO" Items="Leagues">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Interval</MudTh>
+        <MudTh>From</MudTh>
+        <MudTh>To</MudTh>
+        <MudTh>Practice?</MudTh>
+        <MudTh>Qualifying?</MudTh>
+        <MudTh>Race?</MudTh>
+        <MudTh>Classes</MudTh>
+        <MudTh>Sessions</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Id.ToString().Substring(0, 8)...</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.Description</MudTd>
+        <MudTd>@context.Interval</MudTd>
+        <MudTd>@context.Start</MudTd>
+        <MudTd>@context.End</MudTd>
+        <MudTd><MudIcon Icon="@SessionIsNullIcon(context.Practice)" /></MudTd>
+        <MudTd><MudIcon Icon="@SessionIsNullIcon(context.Qualify)" /></MudTd>
+        <MudTd><MudIcon Icon="@SessionIsNullIcon(context.Race)" /></MudTd>
+        <MudTd>@context.CurrentClassIds.Count</MudTd>
+        <MudTd>@context.Sessions.Count</MudTd>
+        <MudTd>
+            <MudButton @onclick="()=>Edit(context.Id)"
+                       Variant="Variant.Filled"
+                       Color="Color.Warning">Edit</MudButton>
+            <MudButton @onclick="()=>Delete(context.Id)"
+                       Variant="Variant.Filled"
+                       Color="Color.Error">Delete</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+
+
+@code {
+    IEnumerable<LeagueDTO> Leagues { get; set; } = [];
+
+    string SessionIsNullIcon(object? session)
+    {
+        return session == null ? Icons.Material.Filled.Close : Icons.Material.Filled.Done;
+    }
+
+    void Edit(Guid id)
+    {
+        Nav.NavigateTo($"/leagues/edit/{id}");
+    }
+
+    async Task Delete(Guid id)
+    {
+        try
+        {
+            await LeagueService.DeleteLeague(id);
+            Leagues = Leagues.Where(x => x.Id != id);
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+    
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Leagues = await LeagueService.GetLeagues();
+        await base.OnInitializedAsync();
+    }
+
+}

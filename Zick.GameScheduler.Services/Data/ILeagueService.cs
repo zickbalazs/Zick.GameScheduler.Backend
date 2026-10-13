@@ -12,5 +12,5 @@ public interface ILeagueService
     Task<LeagueDTO> GetLeagueById(Guid id);
     Task ChangeActiveTrack(Guid id, TrackDTO track);
     Task RemoveSessions(Guid id);
-    Task AddSessions(Guid id);
+    Task AddSessions(Guid id, bool destructive);
 }

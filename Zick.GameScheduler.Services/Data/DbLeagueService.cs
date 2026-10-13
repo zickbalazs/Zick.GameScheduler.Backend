@@ -1,9 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Dashboard.Forms;
 using Zick.GameScheduler.Backend.Data.DTOs;
+using Zick.GameScheduler.Backend.Data.Models;
 
 namespace Zick.GameScheduler.Services.Data;
 
-public class DbLeagueService : ILeagueService
+public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIdentity>> contextFactory) : ILeagueService
 {
     public Task AddLeague(AddLeagueForm form)
     {
@@ -20,9 +23,20 @@ public class DbLeagueService : ILeagueService
         throw new NotImplementedException();
     }
 
-    public Task<IList<LeagueDTO>> GetLeagues()
+    public async Task<IList<LeagueDTO>> GetLeagues()
     {
-        throw new NotImplementedException();
+        await using (var ctx = await contextFactory.CreateDbContextAsync())
+        {
+            return
+            [
+                .. ctx.Leagues
+                    .Include(x => x.Sessions)
+                    .ThenInclude(x => x.Registrations)
+                    .Include(x => x.CurrentTrack)
+                    .Include(x => x.Classes)
+            ];
+
+        }
     }
 
     public Task<LeagueDTO> GetLeagueById(Guid id)
@@ -30,9 +44,18 @@ public class DbLeagueService : ILeagueService
         throw new NotImplementedException();
     }
 
-    public Task ChangeActiveTrack(Guid id, TrackDTO track)
+    public async Task ChangeActiveTrack(Guid id, TrackDTO track)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await contextFactory.CreateDbContextAsync())
+        {
+            var dbEntry = await ctx.Leagues
+                .Include(x=>x.CurrentTrack)
+                .FirstAsync(x => x.Id == id);
+
+            dbEntry.CurrentTrack = await ctx.Tracks.FirstAsync(x => x.Id == track.Id);
+
+            await ctx.SaveChangesAsync();
+        }
     }
 
     public Task RemoveSessions(Guid id)
@@ -40,7 +63,7 @@ public class DbLeagueService : ILeagueService
         throw new NotImplementedException();
     }
 
-    public Task AddSessions(Guid id)
+    public Task AddSessions(Guid id, bool destructive)
     {
         throw new NotImplementedException();
     }
