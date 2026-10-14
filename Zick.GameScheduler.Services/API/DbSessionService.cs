@@ -46,7 +46,14 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
 
     public async Task<IList<SessionDTO>> GetCustomSessions()
     {
-        throw new NotImplementedException();
+        var sessions = await ctx.Sessions
+            .Include(x => x.League)
+            .Include(x => x.Registrations)
+            .ThenInclude(x => x.User)
+            .Where(x => x.League.Name == "Custom Racing League")
+            .ToListAsync();
+
+        return [ ..sessions ];
     }
 
     public async Task RegisterToSession(Guid sessionId, string userId)
@@ -58,11 +65,7 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
     {
         throw new NotImplementedException();
     }
-
-    /// <exception cref="ArgumentNullException">When <c>null</c> is given as any of the parameters</exception>
-    /// <exception cref="InvalidOperationException">When either the registration, or the car was not found</exception>
-    /// <exception cref="DbUpdateException">When saving to the database didn't happen</exception>
-    /// <exception cref="DbUpdateConcurrencyException">When the locks are stuck, no changes happen</exception>
+    
     public async Task AlterRegistrationToSession(Guid sessionId, string userId, Guid newVehicleId)
     {
         var registration = await ctx.Registrations

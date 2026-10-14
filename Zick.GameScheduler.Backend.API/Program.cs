@@ -28,6 +28,18 @@ builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddCors(x =>
+{
+    x.AddDefaultPolicy(m =>
+    {
+        m.WithOrigins([
+            builder.Configuration.GetValue<string>("Cors:BackendURL"),
+            builder.Configuration.GetValue<string>("Cors:FrontendURL")
+        ]);
+        m.WithMethods(["GET", "POST", "PATCH"]);
+    });
+});
+
 
 if (builder.Environment.IsDevelopment())
 {
@@ -68,6 +80,7 @@ if (app.Environment.IsDevelopment())
     app.MapSwaggerUI();
 }
 
+app.UseCors();
 app.MapIdentityApi<RacingUserIdentity>();
 app.MapHub<RegistrationHub>("/hubs/reg");
 app.MapControllers();
