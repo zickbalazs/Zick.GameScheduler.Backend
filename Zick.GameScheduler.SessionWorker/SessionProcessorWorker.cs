@@ -39,14 +39,21 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
         
         if (newSessions.Length < 1)
             return;
-        
-        var scheduler = await schedulerFactory.GetScheduler();
-        
-        newSessions.Select(CreateJobWithTrigger).ToList().ForEach(x =>
+
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
         {
-            scheduler.ScheduleJob(x);
-            logger.LogInformation("created job for session with id: {sessionId}", x.JobKey.Name);
-        });
+            foreach (var session in newSessions)
+            {
+                var dbEntry = await ctx.Sessions.FirstAsync(x => x.Id == session.Id);
+                dbEntry.Status = SessionStatus.Waiting;
+            }
+            await ctx.SaveChangesAsync();
+        }
+
+        foreach (var session in newSessions)
+        {
+            await CreateJobWithTrigger(session);
+        }
     }
 
     private bool SessionIsInADayAndIsCreated(LeagueSession<RacingUserIdentity> session)
@@ -55,7 +62,7 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
     }
     
     
-    private ITrigger CreateJobWithTrigger(LeagueSession<RacingUserIdentity> session)
+    private async Task CreateJobWithTrigger(LeagueSession<RacingUserIdentity> session)
     {
         var job = JobBuilder
             .Create<StartSessionJob>()
@@ -79,9 +86,11 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
         var trigger = TriggerBuilder
             .Create()
             .ForJob(job)
-            .StartAt(plannedStart ?? session.Start);
-        
-        return trigger.Build();
+            .WithIdentity(session.Id.ToString(), "start-triggers")
+            .StartAt(plannedStart ?? session.Start).Build();
+
+        var scheduler = await schedulerFactory.GetScheduler();
+        await scheduler.ScheduleJob(job, trigger);
     }
     
 }

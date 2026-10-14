@@ -38,7 +38,7 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
         }
         
         await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);
-        logger.LogInformation("[startJob | session: {sessionId}]: starting job for session", sessionId);
+        logger.LogInformation("[startJob | session: {sessionId}]: Pre-checks done, starting job for session", sessionId);
         
         var ports = (await portClaimService.ClaimPortForSession(sessionId)).Split(';');
         
