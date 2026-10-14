@@ -9,7 +9,7 @@ public interface ISessionService
     Task<IList<SessionDTO>> GetRegisteredSessions(string userId);
     Task<IList<SessionDTO>> GetAllSessions();
     Task<IList<SessionDTO>> GetCustomSessions();
-    Task RegisterToSession(Guid sessionId, string userId);
+    Task RegisterToSession(Guid sessionId, string userId, Guid vehicleId);
     Task UnregisterFromSession(Guid sessionId, string userId);
     Task AlterRegistrationToSession(Guid sessionId, string userId, Guid newVehicleId);
 }

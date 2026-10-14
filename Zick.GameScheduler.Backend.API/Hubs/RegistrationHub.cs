@@ -1,23 +1,24 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
 
 namespace Zick.GameScheduler.Backend.API.Hubs;
 
-public class RegistrationHub(IDbContextFactory<ApplicationContext<RacingUserIdentity>> ctx) : Hub
+public class RegistrationHub(ApplicationContext<RacingUserIdentity> ctx) : Hub
 {
-    async Task SendRegistrationUpdate(string userId, Guid sessionId)
+    async Task SendSessionLobbySize(Guid sessionId)
     {
-        var context = await ctx.CreateDbContextAsync();
+        var lobbyCount = ctx.Registrations
+            .Include(x => x.Session)
+            .Where(x => x.Session.Id == sessionId);
         
-        
-        var lobbyCount = context.Sessions
-            .Include(x => x.Registrations)
-            .First(x => x.Id == sessionId)
-            .Registrations.Count;
-        
-        await Clients.Group(sessionId.ToString()).SendAsync("GetRegistrationCount", userId, lobbyCount);
+        await Clients.Group(sessionId.ToString()).SendAsync("LobbySizeChange", sessionId.ToString(), lobbyCount);
+    }
+
+    async Task JoinLobby(Guid sessionId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, sessionId.ToString());
     }
 }

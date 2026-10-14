@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using Zick.GameScheduler.Backend.API.Hubs;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
@@ -10,17 +12,24 @@ using Zick.GameScheduler.Services.ServicesAPI;
 // - SignalR for real time registration data [ ]
 // - Auth for requests that require it [ ]
 // - Caching for cacheable requests (vehicles, tracks, etc.) [ ]
+// - Proper error templates
 
-
-// TODO List:
-// Upon starting for the first time, fill out the following tables:
-// - Tracks
-// - Vehicles
 var builder = WebApplication.CreateBuilder(args);
-builder.Logging.AddSimpleConsole();
+builder.Logging.AddSystemdConsole(x =>
+{
+    x.TimestampFormat = "[%y-%M-%d: %h:%m:%s]: ";
+});
+builder.Logging.AddOpenTelemetry(opt => {
+        opt.AddOtlpExporter(x =>
+        {
+            x.Protocol = OtlpExportProtocol.Grpc;
+        });
+        opt.IncludeFormattedMessage = true;
+        opt.IncludeScopes = true;
+});
+builder.AddOpenTelemetry();
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -28,13 +37,17 @@ builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+
+string backendUrl = builder.Configuration.GetValue<string>("Cors:BackendURL") ?? throw new ArgumentException("Backend url must be set"),
+       frontendUrl = builder.Configuration.GetValue<string>("Cors:FrontendURL") ?? throw new ArgumentException("Frontend url must be set") ;
+
 builder.Services.AddCors(x =>
 {
     x.AddDefaultPolicy(m =>
     {
         m.WithOrigins([
-            builder.Configuration.GetValue<string>("Cors:BackendURL"),
-            builder.Configuration.GetValue<string>("Cors:FrontendURL")
+            backendUrl,
+            frontendUrl
         ]);
         m.WithMethods(["GET", "POST", "PATCH"]);
     });
@@ -82,9 +95,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.MapIdentityApi<RacingUserIdentity>();
-app.MapHub<RegistrationHub>("/hubs/reg");
 app.MapControllers();
-
+app.MapHub<RegistrationHub>("/hub/sessions");
 app.UseHttpsRedirection();
 
 app.Run();
