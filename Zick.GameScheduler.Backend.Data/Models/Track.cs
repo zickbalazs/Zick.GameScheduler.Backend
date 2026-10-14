@@ -14,6 +14,7 @@ public class Track<TUserIdentity> : AssettoContent where TUserIdentity : Identit
     
     public required string Name { get; set; }
     public string? CountryCode { get; set; }
+    public int MaxCapacity { get; set; }
 
     // Relations
     public virtual IList<League<TUserIdentity>> CurrentEvents { get; } = [];
@@ -24,6 +25,7 @@ public class Track<TUserIdentity> : AssettoContent where TUserIdentity : Identit
         Id = track.Id,
         Name = track.Name,
         CountryCode = track.CountryCode,
+        MaxCapacity = track.MaxCapacity,
         Folder = track.FolderName
     };
 }
