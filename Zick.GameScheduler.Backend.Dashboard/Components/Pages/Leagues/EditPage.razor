@@ -149,9 +149,9 @@
         Form.ActiveTrack = tracks.First(x => x.Id == league.CurrentTrackId);
         Form.RacingClasses = classes.Where(x => league.CurrentClassIds.Any(m => m == x.Abbreviation));
         
-        Form.Practice = league.Practice;
-        Form.Qualify = league.Qualify;
-        Form.Race = league.Race;
+        Form.Practice = league.Practice ?? new();
+        Form.Qualify = league.Qualify ?? new();
+        Form.Race = league.Race ?? new();
         
         PracticeEnabled = league.Practice != null;
         QualifyingEnabled = league.Qualify != null;

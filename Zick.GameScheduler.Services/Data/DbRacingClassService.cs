@@ -48,14 +48,6 @@ public class DbRacingClassService(IDbContextFactory<ApplicationContext<RacingUse
     
     public async Task AddClass(AddRacingClassForm form)
     {
-        var formCars = form.Cars.Select(x => new Car<RacingUserIdentity>()
-        {
-            Id = x.Id,
-            Manufacturer = x.Manufacturer,
-            Model = x.Model,
-            FolderName = x.FolderName
-        }).ToList();
-        
         await using (var ctx = await ctxFactory.CreateDbContextAsync())
         {
             if (ctx.Classes.Any(x => x.Abbreviation == form.Identifier))
@@ -67,7 +59,12 @@ public class DbRacingClassService(IDbContextFactory<ApplicationContext<RacingUse
                 Name = form.Name,
                 Color = form.Color
             });
-            formCars.ForEach(newClass.Entity.Cars.Add);
+
+            foreach (var car in form.Cars)
+            {
+                newClass.Entity.Cars.Add(ctx.Cars.First(x=>x.Id == car.Id));
+            }
+            
             await ctx.SaveChangesAsync();
         }
     }

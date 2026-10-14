@@ -1,0 +1,41 @@
+﻿@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject ITrackService TrackService
+
+<MudDialog>
+    <TitleContent>
+        <MudText>Select Track for league</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect @bind-Value="SelectedTrack">
+            @foreach (var track in Tracks)
+            {
+                <MudSelectItem Value="track">@track.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton @onclick="Confirm">OK</MudButton>
+        <MudButton @onclick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; }
+
+    IEnumerable<TrackDTO> Tracks { get; set; } = [];
+
+    TrackDTO? SelectedTrack { get; set; }
+
+
+    void Confirm() => MudDialog.Close(SelectedTrack);
+    void Cancel() => MudDialog.Cancel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Tracks = await TrackService.GetTracks();
+        await base.OnInitializedAsync();
+    }
+
+}

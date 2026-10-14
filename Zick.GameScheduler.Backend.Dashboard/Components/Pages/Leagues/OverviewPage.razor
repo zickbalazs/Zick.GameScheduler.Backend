@@ -4,6 +4,7 @@
 @inject ILeagueService LeagueService
 @inject NavigationManager Nav
 @inject ISnackbar SnackbarService
+@inject IDialogService DialogService
 
 <PageTitle>ZGS | Manage Leagues</PageTitle>
 <TitleComponent Title="Manage Leagues"/>
@@ -49,10 +50,12 @@
                 <MudTooltip Text="Add Sessions">
                     <MudIconButton Variant="Variant.Outlined"
                                    Color="Color.Primary"
-                                   Icon="@Icons.Material.Filled.List"/>    
+                                   Icon="@Icons.Material.Filled.List"
+                                   @onclick="()=>OpenFillSession(context.Id)" />    
                 </MudTooltip>
                 <MudTooltip Text="Change active track">
                     <MudIconButton Variant="Variant.Outlined"
+                                   @onclick="()=>OpenTrackSelect(context.Id)"
                                    Color="Color.Secondary"
                                    Icon="@Icons.Material.Filled.EditRoad"/>    
                 </MudTooltip>
@@ -88,6 +91,25 @@
         Nav.NavigateTo($"/leagues/edit/{id}");
     }
 
+    async Task OpenTrackSelect(Guid id)
+    {
+        var dialog = await DialogService.ShowAsync<ChangeTrackDialog>();
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await LeagueService.ChangeActiveTrack(id, (TrackDTO)result.Data);
+                SnackbarService.Add(severity: Severity.Success, message: "Successful track change");
+            }
+            catch (Exception e)
+            {
+                SnackbarService.Add(severity: Severity.Error, message: e.Message);
+            }
+        }
+    }
+    
     async Task Delete(Guid id)
     {
         try
@@ -100,8 +122,22 @@
             SnackbarService.Add(severity: Severity.Error, message: e.Message);
         }
     }
-    
-    
+
+    async Task OpenFillSession(Guid id)
+    {
+        var confirm = await DialogService.ShowAsync<ConfirmDialog>("Add sessions to the league", new DialogOptions()
+        {
+            CloseOnEscapeKey = false
+        });
+
+        var result = await confirm.Result;
+        
+        if (!result!.Canceled)
+        {
+            await LeagueService.AddSessions(id, (bool)result.Data!);
+            Leagues = await LeagueService.GetLeagues();
+        }
+    }
     
     protected override async Task OnInitializedAsync()
     {

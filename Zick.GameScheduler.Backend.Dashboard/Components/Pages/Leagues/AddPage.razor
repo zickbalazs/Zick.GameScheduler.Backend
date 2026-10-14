@@ -27,6 +27,26 @@
                           Placeholder="Lorem ipsum"/>
         </MudItem>
     </MudGrid>
+    
+    <MudDateRangePicker Label="Duration" 
+                        Class="mb-3"
+                        MinDate="DateTime.Now"
+                        @bind-DateRange="Form.FromToRange"/>
+    <MudContainer Gutters="false" Class="mb-3 d-flex align-center">
+        <MudSlider T="uint"
+                   ValueLabel="true"
+                   Variant="Variant.Filled"
+                   @bind-Value="SpanValue">Race interval
+        </MudSlider>
+        <MudSelect @bind-Value="SpanType" Class="ms-3">
+            <MudSelectItem Value="@("Minutes")">Minutes</MudSelectItem>
+            <MudSelectItem Value="@("Hours")">Hours</MudSelectItem>
+            <MudSelectItem Value="@("Days")">Days</MudSelectItem>
+            <MudSelectItem Value="@("Weeks")">Weeks</MudSelectItem>
+        </MudSelect>
+    </MudContainer>
+    
+    
     <MudDivider Class="my-3"/>
     <MudGrid Class="mb-3">
         <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
@@ -116,6 +136,9 @@
     bool ClassButtonDisabled => SelectedClass == null;
     bool FillWithSessions { get; set; }
 
+    uint SpanValue { get; set; } = 0;
+    string? SpanType { get; set; } 
+    
     bool PracticeEnabled { get; set; } = false;
     bool QualifyingEnabled { get; set; } = false;
     bool RaceEnabled { get; set; } = false;
@@ -152,6 +175,12 @@
     {
         try
         {
+            Form.Interval = GetTimeSpan();
+
+            ClearPracticeIfNotChecked();
+            ClearQualifyingIfNotChecked();
+            ClearRaceIfNotChecked();
+            
             await LeagueService.AddLeague(Form, FillWithSessions);
             Nav.NavigateTo("/leagues/overview");
         }
@@ -161,6 +190,39 @@
         }
     }
 
+    private void ClearPracticeIfNotChecked()
+    {
+        Form.PracticeData = PracticeEnabled ? Form.PracticeData : null;
+    }
+
+    private void ClearQualifyingIfNotChecked()
+    {
+        Form.QualifyData = QualifyingEnabled ? Form.QualifyData : null;
+    }
+
+    private void ClearRaceIfNotChecked()
+    {
+        Form.Race = RaceEnabled ? Form.Race : null;
+    }
+
+    TimeSpan GetTimeSpan()
+    {
+        switch (SpanType)
+        {
+            case "Minutes":
+                return TimeSpan.FromMinutes(SpanValue);
+            case "Hours":
+                return TimeSpan.FromHours(SpanValue);
+            case "Days":
+                return TimeSpan.FromDays(SpanValue);
+            case "Weeks":
+                return TimeSpan.FromDays(SpanValue * 7);
+            default:
+                return TimeSpan.FromHours(SpanValue);
+        }
+    }
+    
+    
     void AddSelectedClass()
     {
         if (SelectedClass != null)

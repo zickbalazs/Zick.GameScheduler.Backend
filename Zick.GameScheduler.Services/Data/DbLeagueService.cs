@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Dashboard.Forms;
 using Zick.GameScheduler.Backend.Data.DTOs;
@@ -6,16 +7,56 @@ using Zick.GameScheduler.Backend.Data.Models;
 
 namespace Zick.GameScheduler.Services.Data;
 
-public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIdentity>> contextFactory) : ILeagueService
+public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIdentity>> contextFactory, 
+    ILogger<DbLeagueService> logger) : ILeagueService
 {
-    public Task AddLeague(AddLeagueForm form, bool fillSessions)
+    public async Task AddLeague(AddLeagueForm form, bool fillSessions)
     {
-        throw new NotImplementedException();
+        if (form.CurrentTrack == null)
+            throw new ArgumentNullException();
+
+        if (form.FromToRange.Start == null || form.FromToRange.End == null)
+            throw new ArgumentNullException();
+        
+        var dbEntry = new League<RacingUserIdentity>
+        {
+            Name = form.Name,
+            Description = form.Description,
+            Interval = form.Interval,
+            Start = (DateTime)form.FromToRange.Start,
+            End = (DateTime)form.FromToRange.End,
+            Practice = form.PracticeData,
+            Qualify = form.QualifyData,
+            Race = form.Race,
+        };
+
+        
+        
+        await using (var ctx = await contextFactory.CreateDbContextAsync())
+        {
+            dbEntry.CurrentTrack = ctx.Tracks.First(x => x.Id == form.CurrentTrack.Id);
+            foreach (var cls in form.RacingClasses)
+            {
+                var classEntry = ctx.Classes.First(x => x.Abbreviation == cls.Abbreviation);
+                dbEntry.Classes.Add(classEntry);
+            }
+
+            ctx.Leagues.Add(dbEntry);
+            await ctx.SaveChangesAsync();
+        }
     }
 
-    public Task DeleteLeague(Guid id)
+    public async Task DeleteLeague(Guid id)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await contextFactory.CreateDbContextAsync())
+        {
+            var league = ctx.Leagues
+                .Include(x=>x.Sessions)
+                .First(x => x.Id == id);
+            ctx.Leagues.Remove(league);
+            await ctx.SaveChangesAsync();
+            logger.LogInformation("deleted league with {sessionCount} sessions", league.Sessions.Count);
+        }
     }
 
     public Task ModifyLeague(EditLeagueForm form)
@@ -71,8 +112,50 @@ public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIden
         throw new NotImplementedException();
     }
 
-    public Task AddSessions(Guid id, bool destructive)
+    public async Task AddSessions(Guid id, bool destructive)
     {
-        throw new NotImplementedException();
+        if (destructive)
+        {
+            await using (var ctx = await contextFactory.CreateDbContextAsync())
+            {
+                var sessionsToRemove = ctx.Sessions
+                    .Include(x => x.League)
+                    .Where(x => x.League.Id == id && x.Status == SessionStatus.Waiting);
+                
+                ctx.Sessions.RemoveRange(sessionsToRemove);
+                var results = await ctx.SaveChangesAsync();
+                logger.LogInformation("deleted {sessionCount} sessions that were waiting", results);
+            }
+        }
+        await using (var ctx = await contextFactory.CreateDbContextAsync())
+        {
+            var league = ctx.Leagues.First(x => x.Id == id);
+            var times = ctx.Sessions
+                .Include(m => m.League)
+                .Where(x => x.League.Id == id);
+
+            DateTime time = times.Any() ? times.Max(x => x.Start) : league.Start; 
+
+            time += league.Interval;
+            
+            DateTime end = league.End;
+
+
+            while (time < end)
+            {
+                ctx.Sessions.Add(new()
+                {
+                    Status = SessionStatus.Waiting,
+                    Start = time,
+                    League = league,
+                    Track = null,
+                    PortClaim = null
+                });
+                time += league.Interval;
+            }
+
+            var results = await ctx.SaveChangesAsync();
+            logger.LogInformation("added {sessionCount} sessions for league", results);
+        }
     }
 }
