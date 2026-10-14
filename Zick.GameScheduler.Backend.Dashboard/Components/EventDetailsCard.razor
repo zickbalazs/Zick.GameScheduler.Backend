@@ -1,0 +1,56 @@
+@using Zick.GameScheduler.Backend.Data.Models
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudSwitch Color="Color.Primary"
+                       Value="@SwitchEnabled"
+                       T="bool"
+                       ValueChanged="OnSwitchChange">@SessionType Session</MudSwitch>    
+        </CardHeaderContent>
+    </MudCardHeader>
+    @if (SwitchEnabled)
+    {
+        <MudCardContent>
+            <MudText>Event Details</MudText>
+            <MudContainer>
+                <MudTextField Label="Session Name"
+                              Placeholder="session name"
+                              @bind-Value="SessionData.SessionName"
+                              @oninput="()=>SessionDataChanged.InvokeAsync(SessionData)"/>
+                <MudNumericField Label="Laps"
+                                 @bind-Value="SessionData.Laps"
+                                 @oninput="()=>SessionDataChanged.InvokeAsync(SessionData)"
+                                 Min="0"/>
+                <MudTextField Label="Time Length (in minutes)"
+                              @bind-Value="SessionData.DurationInMinutes"
+                              @oninput="()=>SessionDataChanged.InvokeAsync(SessionData)"
+                              Min="0"/>
+            </MudContainer>
+        </MudCardContent>
+    }
+</MudCard>
+
+
+
+@code {
+    [Parameter]
+    public SessionData SessionData { get; set; } = new()
+    {
+        SessionName = string.Empty,
+        Laps = 0,
+        DurationInMinutes = 0
+    };
+    [Parameter] public string SessionType { get; set; } = string.Empty;
+
+    [Parameter] public EventCallback<SessionData> SessionDataChanged { get; set; }
+    [Parameter] public EventCallback<bool> SwitchEnabledChanged { get; set; }
+    
+    [Parameter]
+    public bool SwitchEnabled { get; set; }
+
+    public async Task OnSwitchChange(bool val)
+    {
+        await SwitchEnabledChanged.InvokeAsync(val);
+    }
+}

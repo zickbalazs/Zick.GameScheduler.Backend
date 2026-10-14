@@ -8,7 +8,7 @@ namespace Zick.GameScheduler.Services.Data;
 
 public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIdentity>> contextFactory) : ILeagueService
 {
-    public Task AddLeague(AddLeagueForm form)
+    public Task AddLeague(AddLeagueForm form, bool fillSessions)
     {
         throw new NotImplementedException();
     }
@@ -39,9 +39,17 @@ public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIden
         }
     }
 
-    public Task<LeagueDTO> GetLeagueById(Guid id)
+    public async Task<LeagueDTO> GetLeagueById(Guid id)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await contextFactory.CreateDbContextAsync())
+        {
+            return await ctx.Leagues
+                .Include(x => x.Sessions)
+                .ThenInclude(x => x.Registrations)
+                .Include(x => x.CurrentTrack)
+                .Include(x => x.Classes)
+                .FirstAsync(x => x.Id == id);
+        }
     }
 
     public async Task ChangeActiveTrack(Guid id, TrackDTO track)

@@ -7,6 +7,7 @@
 @inject IRacingClassService ClassService
 @inject ITrackService TrackService
 @inject ILeagueService LeagueService
+@inject NavigationManager Nav
 
 <PageTitle>ZGS | Add League</PageTitle>
 <TitleComponent Title="Add new league"/>
@@ -30,7 +31,7 @@
     <MudGrid Class="mb-3">
         <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
             <MudText>Select Racing Classes:</MudText>
-            <MudContainer Class="d-flex align-center">
+            <MudContainer Class="d-flex align-center" Gutters="false">
                 <MudSelect @bind-Value="SelectedClass">
                     @foreach (var racingClass in Classes)
                     {
@@ -60,7 +61,7 @@
     <MudGrid Class="mb-3">
         <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
             
-                <MudSelect @bind-Value="SelectedTrack">
+                <MudSelect @bind-Value="Form.CurrentTrack">
                     @foreach (var track in Tracks)
                     {
                         <MudSelectItem Value="track">
@@ -71,35 +72,78 @@
         </MudItem>
     </MudGrid>
 
-
+    <MudText>Setup events:</MudText>
+    <MudGrid>
+        <MudItem xs="12" lg="4">
+            <EventDetailsCard @bind-SessionData="Form.PracticeData"
+                              @bind-SwitchEnabled="PracticeEnabled"
+                              SessionType="Practice"/>
+        </MudItem>
+        <MudItem xs="12" lg="4">
+            <EventDetailsCard @bind-SessionData="Form.QualifyData"
+                              @bind-SwitchEnabled="QualifyingEnabled"
+                              SessionType="Qualifying"/>
+        </MudItem>
+        <MudItem xs="12" lg="4">
+            <EventDetailsCard @bind-SessionData="Form.Race"
+                              @bind-SwitchEnabled="RaceEnabled"
+                              SessionType="Race"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+        <MudItem>
+            <MudCheckBox @bind-Value="FillWithSessions"
+                         Color="Color.Primary">Add Sessions too?</MudCheckBox>
+        </MudItem>
+    </MudGrid>
+    
+    
     <MudGrid>
         <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
-            <MudButton StartIcon="@Icons.Material.Filled.Done">Submit</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Done"
+                       @onclick="Submit">Submit</MudButton>
         </MudItem>
     </MudGrid>
 </MudForm>
 
 
 @code {
-
+    // TODO: Dates
     IEnumerable<RacingClassDTO> Classes { get; set; } = [];
     IEnumerable<TrackDTO> Tracks { get; set; } = [];
-
-    TrackDTO? SelectedTrack { get; set; }
     RacingClassDTO? SelectedClass { get; set; }
 
     bool ClassButtonDisabled => SelectedClass == null;
-    
+    bool FillWithSessions { get; set; }
+
+    bool PracticeEnabled { get; set; } = false;
+    bool QualifyingEnabled { get; set; } = false;
+    bool RaceEnabled { get; set; } = false;
     
     AddLeagueForm Form { get; } = new()
     {
         Name = string.Empty,
         Description = null,
-        PracticeData = null,
-        QualifyData = null,
-        Race = null,
+        PracticeData = new()
+        {
+            SessionName = string.Empty,
+            DurationInMinutes = null,
+            Laps = null
+        },
+        QualifyData = new()
+        {
+            SessionName = string.Empty,
+            DurationInMinutes = null,
+            Laps = null
+        },
+        Race = new()
+        {
+            SessionName = string.Empty,
+            DurationInMinutes = null,
+            Laps = null
+        },
         Interval = TimeSpan.FromHours(1),
-        Duration = new DateRange(),
+        FromToRange = new DateRange(),
         CurrentTrack = null,
         RacingClasses = new List<RacingClassDTO>()
     };
@@ -108,7 +152,8 @@
     {
         try
         {
-            await LeagueService.AddLeague(Form);
+            await LeagueService.AddLeague(Form, FillWithSessions);
+            Nav.NavigateTo("/leagues/overview");
         }
         catch (Exception e)
         {

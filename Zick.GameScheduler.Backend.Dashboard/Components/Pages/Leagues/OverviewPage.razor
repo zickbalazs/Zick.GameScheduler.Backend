@@ -26,22 +26,49 @@
     <RowTemplate>
         <MudTd>@context.Id.ToString().Substring(0, 8)...</MudTd>
         <MudTd>@context.Name</MudTd>
-        <MudTd>@context.Description</MudTd>
+        <MudTd>
+            @if (string.IsNullOrEmpty(context.Description))
+            {
+                @context.Description
+            }
+            else
+            {
+                <i>None</i>
+            }
+        </MudTd>
         <MudTd>@context.Interval</MudTd>
         <MudTd>@context.Start</MudTd>
         <MudTd>@context.End</MudTd>
-        <MudTd><MudIcon Icon="@SessionIsNullIcon(context.Practice)" /></MudTd>
-        <MudTd><MudIcon Icon="@SessionIsNullIcon(context.Qualify)" /></MudTd>
-        <MudTd><MudIcon Icon="@SessionIsNullIcon(context.Race)" /></MudTd>
+        <MudTd><MudIcon Color="Color.Primary" Icon="@SessionIsNullIcon(context.Practice)" /></MudTd>
+        <MudTd><MudIcon Color="Color.Primary" Icon="@SessionIsNullIcon(context.Qualify)" /></MudTd>
+        <MudTd><MudIcon Color="Color.Primary" Icon="@SessionIsNullIcon(context.Race)" /></MudTd>
         <MudTd>@context.CurrentClassIds.Count</MudTd>
         <MudTd>@context.Sessions.Count</MudTd>
         <MudTd>
-            <MudButton @onclick="()=>Edit(context.Id)"
-                       Variant="Variant.Filled"
-                       Color="Color.Warning">Edit</MudButton>
-            <MudButton @onclick="()=>Delete(context.Id)"
-                       Variant="Variant.Filled"
-                       Color="Color.Error">Delete</MudButton>
+            <MudButtonGroup Color="Color.Primary">
+                <MudTooltip Text="Add Sessions">
+                    <MudIconButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Icon="@Icons.Material.Filled.List"/>    
+                </MudTooltip>
+                <MudTooltip Text="Change active track">
+                    <MudIconButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   Icon="@Icons.Material.Filled.EditRoad"/>    
+                </MudTooltip>
+                <MudTooltip Text="Edit league">
+                    <MudIconButton @onclick="() => Edit(context.Id)"
+                                   Icon="@Icons.Material.Filled.Edit"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Warning"/>    
+                </MudTooltip>
+                <MudTooltip Text="Delete league">
+                    <MudIconButton @onclick="() => Delete(context.Id)"
+                                   Icon="@Icons.Material.Filled.Delete"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Error"/>    
+                </MudTooltip>
+            </MudButtonGroup>
         </MudTd>
     </RowTemplate>
 </MudTable>

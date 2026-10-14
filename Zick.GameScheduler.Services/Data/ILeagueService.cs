@@ -5,7 +5,7 @@ namespace Zick.GameScheduler.Services.Data;
 
 public interface ILeagueService
 {
-    Task AddLeague(AddLeagueForm form);
+    Task AddLeague(AddLeagueForm form, bool fillSessions);
     Task DeleteLeague(Guid id);
     Task ModifyLeague(EditLeagueForm form);
     Task<IList<LeagueDTO>> GetLeagues();
