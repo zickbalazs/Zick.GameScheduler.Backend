@@ -74,7 +74,11 @@ public class DockerSwarmContainerService(IDockerClient client,
             .Include(n=>n.Track)
             .Include(x=>x.Registrations)
             .ThenInclude(m=>m.Car)
-            .FirstAsync(x => x.Id == sessionId); 
+            .FirstAsync(x => x.Id == sessionId);
+
+        string serverPass = sessionEntry.GetHashCode().ToString();
+
+        await portClaimService.AddPasswordForSession(sessionEntry.PortClaim!.Id, serverPass);
         
         spec.TaskTemplate.ContainerSpec.Env = new List<string>()
         {
@@ -82,7 +86,7 @@ public class DockerSwarmContainerService(IDockerClient client,
             $"VEHICLES={string.Join(";",sessionEntry.Registrations.Select(x=>x.Car.FolderName).Distinct())}",
             $"SERVER_NAME='Zick GameScheduler {sessionId}'",
             $"TRACK={sessionEntry.Track?.FolderName ?? sessionEntry.League.CurrentTrack.FolderName}",
-            $"SERVER_PASSWORD={sessionEntry.GetHashCode()}",
+            $"SERVER_PASSWORD={serverPass}",
             $"SERVER_PORT={serverPort}",
             $"HTTP_PORT={httpPort}",
             $"MAX_PARTICIPANTS={sessionEntry.Registrations.Count}"

@@ -20,9 +20,26 @@ public class DbRacingClassService(IDbContextFactory<ApplicationContext<RacingUse
         }
     }
 
-    public Task ModifyClass(EditRacingClassForm form)
+    public async Task ModifyClass(EditRacingClassForm form)
     {
-        throw new NotImplementedException();
+        await using (var ctx = await ctxFactory.CreateDbContextAsync())
+        {
+            var entry = ctx.Classes
+                .Include(x => x.Cars)
+                .First(x => x.Abbreviation == form.Identifier);
+
+            entry.Name = form.Name;
+            entry.Color = form.Color;
+
+            entry.Cars.Clear();
+            
+            foreach (var car in form.Cars)
+            {
+                entry.Cars.Add(ctx.Cars.First(x=>x.Id == car.Id));
+            }
+
+            await ctx.SaveChangesAsync();
+        }
     }
 
     public async Task<IList<RacingClassDTO>> GetClasses()

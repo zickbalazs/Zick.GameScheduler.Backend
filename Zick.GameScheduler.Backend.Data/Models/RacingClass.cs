@@ -22,7 +22,7 @@ public class RacingClass<TUserIdentity> where TUserIdentity : IdentityUser
     {
         Abbreviation = rClass.Abbreviation,
         Name = rClass.Name,
-        Color = rClass.Name,
+        Color = rClass.Color,
         Cars = [ ..rClass.Cars ]
     };
 }

@@ -85,4 +85,10 @@ public class DbPortClaimService(ApplicationContext<RacingUserIdentity> ctx,
         return $"{serverPort};{httpPort}";
 
     }
+
+    public async Task AddPasswordForSession(Guid id, string passwd)
+    {
+        ctx.PortClaims.First(x => x.Id == id).ServerPassword = passwd;
+        await ctx.SaveChangesAsync();
+    }
 }

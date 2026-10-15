@@ -13,6 +13,8 @@ using Zick.GameScheduler.Backend.Data.Models;
 using Zick.GameScheduler.Services.Generators;
 using Zick.GameScheduler.Backend.Scheduler.Services;
 using Zick.GameScheduler.Services.Data;
+using DbSessionService = Zick.GameScheduler.Services.Data.DbSessionService;
+using ISessionService = Zick.GameScheduler.Services.Data.ISessionService;
 
 var builder = WebApplication.CreateBuilder(args);
 
