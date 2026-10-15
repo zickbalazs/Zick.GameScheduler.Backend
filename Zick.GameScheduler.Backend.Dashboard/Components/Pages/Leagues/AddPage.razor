@@ -1,0 +1,250 @@
+@page "/leagues/add"
+@using Zick.GameScheduler.Backend.Dashboard.Common
+@using Zick.GameScheduler.Backend.Data.Dashboard.Forms
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject ISnackbar SnackbarService
+@inject IRacingClassService ClassService
+@inject ITrackService TrackService
+@inject ILeagueService LeagueService
+@inject NavigationManager Nav
+
+<PageTitle>ZGS | Add League</PageTitle>
+<TitleComponent Title="Add new league"/>
+
+<MudForm>
+    <MudGrid Class="mb-3">
+        <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
+            <MudTextField @bind-Value="Form.Name"
+                          Label="League Name"
+                          Placeholder="Clown Racing League"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
+            <MudTextField @bind-Value="Form.Description"
+                          Label="Description"
+                          Placeholder="Lorem ipsum"/>
+        </MudItem>
+    </MudGrid>
+    
+    <MudDateRangePicker Label="Duration" 
+                        Class="mb-3"
+                        MinDate="DateTime.Today"
+                        @bind-DateRange="Form.FromToRange"/>
+    <MudContainer Gutters="false" Class="mb-3 d-flex align-center">
+        <MudSlider T="uint"
+                   ValueLabel="true"
+                   Variant="Variant.Filled"
+                   @bind-Value="SpanValue">Race interval
+        </MudSlider>
+        <MudSelect @bind-Value="SpanType" Class="ms-3">
+            <MudSelectItem Value="@("Minutes")">Minutes</MudSelectItem>
+            <MudSelectItem Value="@("Hours")">Hours</MudSelectItem>
+            <MudSelectItem Value="@("Days")">Days</MudSelectItem>
+            <MudSelectItem Value="@("Weeks")">Weeks</MudSelectItem>
+        </MudSelect>
+    </MudContainer>
+    
+    
+    <MudDivider Class="my-3"/>
+    <MudGrid Class="mb-3">
+        <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
+            <MudText>Select Racing Classes:</MudText>
+            <MudContainer Class="d-flex align-center" Gutters="false">
+                <MudSelect @bind-Value="SelectedClass">
+                    @foreach (var racingClass in Classes)
+                    {
+                        <MudSelectItem Value="racingClass">@racingClass.Name | @racingClass.Abbreviation</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                               Color="Color.Primary"
+                               Disabled="ClassButtonDisabled"
+                               @onclick="AddSelectedClass"/>
+            </MudContainer>
+            @if (Form.RacingClasses.Count > 0)
+            {
+                <MudContainer Class="d-flex">
+                    @foreach (var raceClass in Form.RacingClasses)
+                    {
+                        <MudChip T="RacingClassDTO"
+                                 CloseIcon="@Icons.Material.Filled.Close"
+                                 OnClose="()=>RemoveClass(raceClass)">@raceClass.Abbreviation</MudChip>
+                    }
+                </MudContainer>                
+            }
+        </MudItem>
+    </MudGrid>
+    <MudDivider Class="my-3"/>
+    <MudText>Select Track:</MudText>
+    <MudGrid Class="mb-3">
+        <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
+            
+                <MudSelect @bind-Value="Form.CurrentTrack">
+                    @foreach (var track in Tracks)
+                    {
+                        <MudSelectItem Value="track">
+                            @track.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+        </MudItem>
+    </MudGrid>
+
+    <MudText>Setup events:</MudText>
+    <MudGrid>
+        <MudItem xs="12" lg="4">
+            <EventDetailsCard @bind-SessionData="Form.PracticeData"
+                              @bind-SwitchEnabled="PracticeEnabled"
+                              SessionType="Practice"/>
+        </MudItem>
+        <MudItem xs="12" lg="4">
+            <EventDetailsCard @bind-SessionData="Form.QualifyData"
+                              @bind-SwitchEnabled="QualifyingEnabled"
+                              SessionType="Qualifying"/>
+        </MudItem>
+        <MudItem xs="12" lg="4">
+            <EventDetailsCard @bind-SessionData="Form.Race"
+                              @bind-SwitchEnabled="RaceEnabled"
+                              SessionType="Race"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+        <MudItem>
+            <MudCheckBox @bind-Value="FillWithSessions"
+                         Color="Color.Primary">Add Sessions too?</MudCheckBox>
+        </MudItem>
+    </MudGrid>
+    
+    
+    <MudGrid>
+        <MudItem xs="Constants.GridXsSize" md="Constants.GridMdSize">
+            <MudButton StartIcon="@Icons.Material.Filled.Done"
+                       @onclick="Submit">Submit</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+
+@code {
+    // TODO: Dates
+    IEnumerable<RacingClassDTO> Classes { get; set; } = [];
+    IEnumerable<TrackDTO> Tracks { get; set; } = [];
+    RacingClassDTO? SelectedClass { get; set; }
+
+    bool ClassButtonDisabled => SelectedClass == null;
+    bool FillWithSessions { get; set; }
+
+    uint SpanValue { get; set; } = 0;
+    string? SpanType { get; set; } 
+    
+    bool PracticeEnabled { get; set; } = false;
+    bool QualifyingEnabled { get; set; } = false;
+    bool RaceEnabled { get; set; } = false;
+    
+    AddLeagueForm Form { get; } = new()
+    {
+        Name = string.Empty,
+        Description = null,
+        PracticeData = new()
+        {
+            SessionName = string.Empty,
+            DurationInMinutes = null,
+            Laps = null
+        },
+        QualifyData = new()
+        {
+            SessionName = string.Empty,
+            DurationInMinutes = null,
+            Laps = null
+        },
+        Race = new()
+        {
+            SessionName = string.Empty,
+            DurationInMinutes = null,
+            Laps = null
+        },
+        Interval = TimeSpan.FromHours(1),
+        FromToRange = new DateRange(),
+        CurrentTrack = null,
+        RacingClasses = new List<RacingClassDTO>()
+    };
+
+    async Task Submit()
+    {
+        try
+        {
+            Form.Interval = GetTimeSpan();
+
+            ClearPracticeIfNotChecked();
+            ClearQualifyingIfNotChecked();
+            ClearRaceIfNotChecked();
+            
+            await LeagueService.AddLeague(Form, FillWithSessions);
+            Nav.NavigateTo("/leagues/overview");
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+
+    private void ClearPracticeIfNotChecked()
+    {
+        Form.PracticeData = PracticeEnabled ? Form.PracticeData : null;
+    }
+
+    private void ClearQualifyingIfNotChecked()
+    {
+        Form.QualifyData = QualifyingEnabled ? Form.QualifyData : null;
+    }
+
+    private void ClearRaceIfNotChecked()
+    {
+        Form.Race = RaceEnabled ? Form.Race : null;
+    }
+
+    TimeSpan GetTimeSpan()
+    {
+        switch (SpanType)
+        {
+            case "Minutes":
+                return TimeSpan.FromMinutes(SpanValue);
+            case "Hours":
+                return TimeSpan.FromHours(SpanValue);
+            case "Days":
+                return TimeSpan.FromDays(SpanValue);
+            case "Weeks":
+                return TimeSpan.FromDays(SpanValue * 7);
+            default:
+                return TimeSpan.FromHours(SpanValue);
+        }
+    }
+    
+    
+    void AddSelectedClass()
+    {
+        if (SelectedClass != null)
+        {
+            var cls = SelectedClass;
+            Form.RacingClasses.Add(cls);
+            Classes = Classes.Where(x => x.Abbreviation != cls.Abbreviation).OrderBy(x=>x.Abbreviation);
+            SelectedClass = null;
+        }
+    }
+
+    void RemoveClass(RacingClassDTO cls)
+    {
+        Form.RacingClasses.Remove(cls);
+        Classes = Classes.Append(cls).OrderBy(x=>x.Abbreviation);
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Classes = await ClassService.GetClasses();
+        Tracks = await TrackService.GetTracks();
+        await base.OnInitializedAsync();
+    }
+
+}

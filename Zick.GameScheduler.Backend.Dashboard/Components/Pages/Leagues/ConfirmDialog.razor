@@ -1,0 +1,26 @@
+﻿
+
+<MudDialog>
+    <TitleContent>
+        Add sessions to league
+    </TitleContent>
+    <DialogContent>
+        <MudCheckBox @bind-Value="ConfirmDestructive">Do you want to destroy previous sessions?</MudCheckBox>
+    </DialogContent>
+    <DialogActions>
+        <MudButton @onclick="Confirm">OK</MudButton>
+        <MudButton @onclick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    
+    bool ConfirmDestructive { get; set; }
+    
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(ConfirmDestructive));
+    private void Cancel() => MudDialog.Cancel();
+}

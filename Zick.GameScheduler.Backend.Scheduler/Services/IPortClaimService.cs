@@ -1,0 +1,9 @@
+namespace Zick.GameScheduler.Backend.Scheduler.Services;
+
+public interface IPortClaimService
+{
+    Task<string> ClaimPortForSession(Guid id);
+    Task EndClaimForSession(Guid id);
+    Task<string> GetPortsForSession(Guid id);
+    Task AddPasswordForSession(Guid id, string passwd);
+}

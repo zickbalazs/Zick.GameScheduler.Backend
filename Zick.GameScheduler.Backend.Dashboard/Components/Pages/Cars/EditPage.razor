@@ -1,0 +1,94 @@
+@page "/vehicles/edit/{Id}"
+@using Zick.GameScheduler.Backend.Data.Dashboard.Forms
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject NavigationManager NavManager
+@inject IVehicleService VehicleService
+@inject ISnackbar SnackbarService
+
+<PageTitle>ZGS | Editing vehicle</PageTitle>
+<TitleComponent Title="@($"Edit: {OriginalCarName}")" />
+
+<MudForm>
+    <MudGrid Class="mb-3">
+        <MudItem xs="12" md="8">
+            <MudTextField T="Guid"
+                          @bind-Value="Car.Id"
+                          Label="Id"
+                          Disabled="true"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="12" md="8">
+            <MudTextField T="string"
+                          @bind-Value="Car.Manufacturer"
+                          Label="Manufacturer"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="12" md="8">
+            <MudTextField T="string"
+                          @bind-Value="Car.Model"
+                          Label="Model"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="12" md="8">
+            <MudTextField T="string"
+                          @bind-Value="Car.Folder"
+                          Label="Folder Name"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+        <MudItem>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Outlined"
+                       @onclick="Submit">Submit</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+
+
+
+
+@code {
+    [Parameter] public required string Id { get; set; }
+    Guid IdInGuid { get; set; }
+    string OriginalCarName { get; set; } = "";
+    EditVehicleForm Car { get; } = new();
+
+
+    async Task Submit()
+    {
+        try
+        {
+            await VehicleService.EditVehicle(Car);
+            NavManager.NavigateTo("/vehicles/overview");
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            IdInGuid = new Guid(Id);
+            var dbEntry = await VehicleService.GetVehicle(IdInGuid);
+            OriginalCarName = $"{dbEntry.Manufacturer} {dbEntry.Model}".Trim();
+            Car.Id = dbEntry.Id;
+            Car.Manufacturer = dbEntry.Manufacturer;
+            Car.Model = dbEntry.Model;
+            Car.Folder = dbEntry.FolderName;
+        }
+        catch
+        {
+            NavManager.NavigateTo("/vehicles/overview");
+        }
+        await base.OnInitializedAsync();
+    }
+
+}

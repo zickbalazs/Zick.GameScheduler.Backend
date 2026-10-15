@@ -49,21 +49,6 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.ToTable("League<RacingUserIdentity>RacingClass<RacingUserIdentity>");
                 });
 
-            modelBuilder.Entity("LeagueSession<RacingUserIdentity>RacingUserIdentity", b =>
-                {
-                    b.Property<string>("RegistrationsId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("SessionsId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("RegistrationsId", "SessionsId");
-
-                    b.HasIndex("SessionsId");
-
-                    b.ToTable("LeagueSession<RacingUserIdentity>RacingUserIdentity");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -294,6 +279,12 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.Property<Guid>("LeagueId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("PortClaimId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RacingUserIdentityId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("Start")
                         .HasColumnType("TEXT");
 
@@ -306,6 +297,10 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LeagueId");
+
+                    b.HasIndex("PortClaimId");
+
+                    b.HasIndex("RacingUserIdentityId");
 
                     b.HasIndex("TrackId");
 
@@ -395,6 +390,117 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionPortClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClaimedHttpPort")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClaimedPort")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsInUse")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PortClaims");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionRegistration<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CarId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Registrations");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionResult<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SessionName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("Results");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionResultDetails<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeSpan>("BestLapTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CarName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDisqualified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPenalized")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan>("PenaltyTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SessionResultId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeSpan>("TotalTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionResultId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ResultDetails");
+                });
+
             modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.Track<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
                 {
                     b.Property<Guid>("Id")
@@ -407,6 +513,9 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.Property<string>("FolderName")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("MaxCapacity")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -443,21 +552,6 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.HasOne("Zick.GameScheduler.Backend.Data.Models.League<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", null)
                         .WithMany()
                         .HasForeignKey("LeaguesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LeagueSession<RacingUserIdentity>RacingUserIdentity", b =>
-                {
-                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity", null)
-                        .WithMany()
-                        .HasForeignKey("RegistrationsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.LeagueSession<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", null)
-                        .WithMany()
-                        .HasForeignKey("SessionsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -527,10 +621,18 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
             modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.LeagueSession<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
                 {
                     b.HasOne("Zick.GameScheduler.Backend.Data.Models.League<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", "League")
-                        .WithMany()
+                        .WithMany("Sessions")
                         .HasForeignKey("LeagueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.SessionPortClaim", "PortClaim")
+                        .WithMany()
+                        .HasForeignKey("PortClaimId");
+
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity", null)
+                        .WithMany("Registrations")
+                        .HasForeignKey("RacingUserIdentityId");
 
                     b.HasOne("Zick.GameScheduler.Backend.Data.Models.Track<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", "Track")
                         .WithMany("Sessions")
@@ -538,7 +640,89 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
 
                     b.Navigation("League");
 
+                    b.Navigation("PortClaim");
+
                     b.Navigation("Track");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionRegistration<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.Car<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", "Car")
+                        .WithMany("Registrations")
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.LeagueSession<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", "Session")
+                        .WithMany("Registrations")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Car");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionResult<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.LeagueSession<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", "Session")
+                        .WithMany("Results")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionResultDetails<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.SessionResult<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", "SessionResult")
+                        .WithMany("Details")
+                        .HasForeignKey("SessionResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("SessionResult");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.Car<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Navigation("Registrations");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.League<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.LeagueSession<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Navigation("Registrations");
+
+                    b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity", b =>
+                {
+                    b.Navigation("Registrations");
+                });
+
+            modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.SessionResult<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>
+                {
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("Zick.GameScheduler.Backend.Data.Models.Track<Zick.GameScheduler.Backend.Data.Models.RacingUserIdentity>", b =>

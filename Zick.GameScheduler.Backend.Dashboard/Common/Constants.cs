@@ -6,6 +6,13 @@ namespace Zick.GameScheduler.Backend.Dashboard.Common;
 public static class Constants
 {
     public const string AppName = "Assetto Corsa Game Scheduler";
+    public static Guid CustomLeagueId = new Guid("CF4B486E-430C-4508-A1E9-DF636468EE53");
+    public static Guid CustomRaceId = new Guid("EB913E83-C366-4D8D-9221-A6EA1F9E4C66");
+    
+    public const ushort GridXsSize = 12;
+    public const ushort GridMdSize = 8;
+    
+    public const string CustomRacingClass = "CSTM";
     public static NavMenuGroup[] NavMenuGroups = [
         new()
         {
@@ -16,13 +23,13 @@ public static class Constants
                 {
                     Name = "Add Vehicle",
                     Icon = MudBlazor.Icons.Material.Filled.Add,
-                    Href = "/vehicles/new"
+                    Href = "/vehicles/add"
                 },
                 new()
                 {
-                    Name = "Edit Vehicles",
+                    Name = "List Vehicles",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/vehicles/edit"
+                    Href = "/vehicles/overview"
                 }
             ]
         },
@@ -39,9 +46,9 @@ public static class Constants
                 },
                 new()
                 {
-                    Name = "Edit Tracks",
+                    Name = "List Tracks",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/tracks/edit"
+                    Href = "/tracks/overview"
                 }
             ]
         },
@@ -58,9 +65,9 @@ public static class Constants
                 },
                 new()
                 {
-                    Name = "Edit Leagues",
+                    Name = "List Leagues",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/leagues/edit"
+                    Href = "/leagues/overview"
                 }
             ]
         },
@@ -79,7 +86,7 @@ public static class Constants
                 {
                     Name = "Manage Classes",
                     Icon = MudBlazor.Icons.Material.Filled.Edit,
-                    Href = "/classes/edit"
+                    Href = "/classes/overview"
                 }
             ]
         },
@@ -98,13 +105,13 @@ public static class Constants
                 {
                     Name = "Manage League Sessions",
                     Icon = MudBlazor.Icons.Material.Filled.ManageAccounts,
-                    Href = "/sessions/edit/league"
+                    Href = "/sessions/overview/league"
                 },
                 new()
                 {
                     Name = "Manage Custom Sessions",
                     Icon = MudBlazor.Icons.Material.Filled.ManageAccounts,
-                    Href = "/sessions/edit/custom"
+                    Href = "/sessions/overview/custom"
                 }
             ]
         }

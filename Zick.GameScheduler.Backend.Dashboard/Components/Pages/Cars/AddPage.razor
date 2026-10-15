@@ -1,0 +1,72 @@
+@page "/vehicles/add"
+@using Zick.GameScheduler.Backend.Data.Dashboard.Forms
+@using Zick.GameScheduler.Services.Data
+@inject IVehicleService VehicleService
+@inject ISnackbar SnackbarService
+@inject NavigationManager NavManager
+
+
+<PageTitle>ZGS | Add new vehicle</PageTitle>
+<TitleComponent Title="Add new vehicle"/>
+
+<MudForm Model="@Form">
+    
+    <MudGrid>
+        <MudItem>
+            <MudTextField T="string"
+                          @bind-Value="Form.Manufacturer"
+                          Label="Manufacturer (optional)"
+                          Placeholder="Ford" />
+        </MudItem>    
+    </MudGrid>
+    <MudGrid>
+        <MudItem>
+            <MudTextField T="string"
+                          @bind-Value="Form.Model"
+                          Label="Model"
+                          Placeholder="Escort Mk I." />
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+        <MudItem>
+            <MudTextField T="string"
+                          @bind-Value="Form.FolderName"
+                          Label="Folder Name"
+                          Placeholder="ks_spa" />
+        </MudItem>
+    </MudGrid>
+    
+    <MudDivider Class="my-3"/>
+    
+    <MudGrid>
+        <MudItem>
+            <MudButton @onclick="Submit">Submit</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+
+
+@code {
+
+    AddVehicleForm Form { get; } = new()
+    {
+        FolderName = string.Empty,
+        Model = string.Empty,
+        Manufacturer = string.Empty
+    };
+    
+    async Task Submit()
+    {
+        try
+        {
+            await VehicleService.AddVehicle(Form);
+            NavManager.NavigateTo("/vehicles/overview");
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+    
+}

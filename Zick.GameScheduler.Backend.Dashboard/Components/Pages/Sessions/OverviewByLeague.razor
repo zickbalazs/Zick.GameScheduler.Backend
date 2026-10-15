@@ -1,0 +1,119 @@
+﻿@page "/sessions/overview/league"
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Backend.Data.Models
+@using Zick.GameScheduler.Services.Data
+@inject ILeagueService LeagueService
+@inject ISessionService SessionService
+
+
+<PageTitle>ZGS | Manage Sessions</PageTitle>
+<TitleComponent Title="Manage Sessions by Leagues"/>
+
+<MudContainer Gutters="false" MaxWidth="MaxWidth.Medium">
+    <MudSelect @bind-Value="SelectedLeague"
+               @bind-Value:after="UpdateSessions"
+               Placeholder="Select a league"
+               Label="League"
+               >
+        <Virtualize ItemsProvider="GetLeagues" Context="league">
+            <MudSelectItem Value="league">@(league.Name)</MudSelectItem>
+        </Virtualize>
+    </MudSelect>
+    @if (Sessions.Any())
+    {
+        <MudTable Items="Sessions">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Start</MudTh>
+                <MudTh>Registrations</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Id</MudTd>
+                <MudTd Class="@(AssignColorToStatus(context.Status))">@context.Status</MudTd>
+                <MudTd>@context.Start</MudTd>
+                <MudTd>@context.RegistrationIds.Count</MudTd>
+                <MudTd>
+                    <MudButton StartIcon="@Icons.Material.Filled.PlayArrow"
+                               Color="Color.Success">Start</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Cancel"
+                               Color="Color.Warning"
+                               OnClick="()=>CancelSession(context.Id)"
+                               Disabled="@DisableCancelBtn(context.Status)">
+                        @if (context.Status == SessionStatus.Cancelled)
+                        {
+                            <span>Reinstate</span>
+                        }
+                        else
+                        {
+                            <span>Cancel</span>
+                        }
+                    </MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="()=>DeleteSession(context.Id)">Delete</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>    
+    }
+</MudContainer>
+
+
+@code {
+    LeagueDTO? SelectedLeague { get; set; }
+    IEnumerable<SessionDTO> Sessions { get; set; } = [];
+
+    async Task UpdateSessions()
+    {
+        if (SelectedLeague != null)
+            Sessions = SelectedLeague.Sessions;
+        else
+            Sessions = [];
+    }
+    
+    async ValueTask<ItemsProviderResult<LeagueDTO>> GetLeagues(ItemsProviderRequest request)
+    {
+        var leagues = await LeagueService.GetLeagues();
+        leagues = [.. leagues.Where(x => x.Name != "Custom Racing League")];
+        return new(leagues,leagues.Count);
+    }
+
+    async Task DeleteSession(Guid id)
+    {
+        await SessionService.DeleteSession(id);
+        Sessions = Sessions.Where(x => x.Id != id);
+    }
+
+    async Task CancelSession(Guid id)
+    {
+        await SessionService.CancelSession(id);
+        SelectedLeague = await LeagueService.GetLeagueById(SelectedLeague!.Id);
+        Sessions = SelectedLeague!.Sessions;
+    }
+
+    bool DisableCancelBtn(SessionStatus status)
+    {
+        return status != SessionStatus.Cancelled && status != SessionStatus.Waiting;
+    }
+    
+    string AssignColorToStatus(SessionStatus status)
+    {
+        switch (status)
+        {
+            case SessionStatus.Waiting:
+                return "mud-theme-primary";
+            case SessionStatus.Starting:
+                return "mud-theme-warning";
+            case SessionStatus.Underway:
+                return "mud-theme-success";
+            case SessionStatus.Finished:
+                return "mud-theme-dark";
+            case SessionStatus.Error:
+                return "mud-theme-error";
+            default:
+                return "mud-theme-secondary";
+        }
+    }
+    
+}

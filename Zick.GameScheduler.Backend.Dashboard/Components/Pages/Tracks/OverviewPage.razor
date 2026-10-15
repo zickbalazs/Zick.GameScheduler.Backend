@@ -1,0 +1,69 @@
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject ITrackService TrackService
+@inject ISnackbar SnackbarService
+@inject NavigationManager NavigationManager
+
+@page "/tracks/overview"
+
+<PageTitle>ZGS | Manage Tracks</PageTitle>
+<TitleComponent Title="Manage Tracks"/>
+
+<MudTable T="TrackDTO" Items="@Tracks">
+   <HeaderContent>
+      <MudTh>Id</MudTh>
+      <MudTh>Track Name</MudTh>
+      <MudTh>Track Country</MudTh>
+      <MudTh>Folder Name</MudTh>
+      <MudTh>Actions</MudTh>
+   </HeaderContent>
+   <RowTemplate>
+      <MudTd>@context.Id.ToString().Substring(0, 8)...</MudTd>
+      <MudTd>@context.Name</MudTd>
+      <MudTd>@context.CountryCode</MudTd>
+      <MudTd>@context.Folder</MudTd>
+      <MudTd>
+         <MudButton @onclick="()=>Edit(context.Id)"
+                    Color="Color.Warning"
+                    Variant="Variant.Filled"
+                    StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
+         <MudButton @onclick="()=>Delete(context.Id)"
+                    Color="Color.Error"
+                    Variant="Variant.Filled"
+                    StartIcon="@Icons.Material.Filled.Delete">Delete</MudButton>
+      </MudTd>
+   </RowTemplate>
+</MudTable>
+
+@code {
+   IEnumerable<TrackDTO> Tracks { get; set; }
+
+   void Edit(Guid trackId) => NavigationManager.NavigateTo($"/tracks/edit/{trackId}");
+
+   async Task Delete(Guid trackId)
+   {
+      try
+      {
+         await TrackService.DeleteTrack(trackId);
+         Tracks = Tracks.Where(x => x.Id != trackId);
+      }
+      catch (Exception e)
+      {
+         SnackbarService.Add(severity: Severity.Error, message: e.Message);
+      }
+   }
+
+   protected override async Task OnInitializedAsync()
+   {
+      try
+      {
+         Tracks = await TrackService.GetTracks();
+      }
+      catch (Exception e)
+      {
+         SnackbarService.Add(severity: Severity.Error, message: e.Message);
+      }
+      await base.OnInitializedAsync();
+   }
+
+}

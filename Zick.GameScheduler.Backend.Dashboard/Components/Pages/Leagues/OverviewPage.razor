@@ -1,0 +1,148 @@
+@page "/leagues/overview"
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject ILeagueService LeagueService
+@inject NavigationManager Nav
+@inject ISnackbar SnackbarService
+@inject IDialogService DialogService
+
+<PageTitle>ZGS | Manage Leagues</PageTitle>
+<TitleComponent Title="Manage Leagues"/>
+
+<MudTable T="LeagueDTO" Items="Leagues">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Interval</MudTh>
+        <MudTh>From</MudTh>
+        <MudTh>To</MudTh>
+        <MudTh>Practice?</MudTh>
+        <MudTh>Qualifying?</MudTh>
+        <MudTh>Race?</MudTh>
+        <MudTh>Classes</MudTh>
+        <MudTh>Sessions</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Id.ToString().Substring(0, 8)...</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>
+            @if (string.IsNullOrEmpty(context.Description))
+            {
+                @context.Description
+            }
+            else
+            {
+                <i>None</i>
+            }
+        </MudTd>
+        <MudTd>@context.Interval</MudTd>
+        <MudTd>@context.Start</MudTd>
+        <MudTd>@context.End</MudTd>
+        <MudTd><MudIcon Color="Color.Primary" Icon="@SessionIsNullIcon(context.Practice)" /></MudTd>
+        <MudTd><MudIcon Color="Color.Primary" Icon="@SessionIsNullIcon(context.Qualify)" /></MudTd>
+        <MudTd><MudIcon Color="Color.Primary" Icon="@SessionIsNullIcon(context.Race)" /></MudTd>
+        <MudTd>@context.CurrentClassIds.Count</MudTd>
+        <MudTd>@context.Sessions.Count</MudTd>
+        <MudTd>
+            <MudButtonGroup Color="Color.Primary">
+                <MudTooltip Text="Add Sessions">
+                    <MudIconButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Icon="@Icons.Material.Filled.List"
+                                   @onclick="()=>OpenFillSession(context.Id)" />    
+                </MudTooltip>
+                <MudTooltip Text="Change active track">
+                    <MudIconButton Variant="Variant.Outlined"
+                                   @onclick="()=>OpenTrackSelect(context.Id)"
+                                   Color="Color.Secondary"
+                                   Icon="@Icons.Material.Filled.EditRoad"/>    
+                </MudTooltip>
+                <MudTooltip Text="Edit league">
+                    <MudIconButton @onclick="() => Edit(context.Id)"
+                                   Icon="@Icons.Material.Filled.Edit"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Warning"/>    
+                </MudTooltip>
+                <MudTooltip Text="Delete league">
+                    <MudIconButton @onclick="() => Delete(context.Id)"
+                                   Icon="@Icons.Material.Filled.Delete"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Error"/>    
+                </MudTooltip>
+            </MudButtonGroup>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+
+
+@code {
+    IEnumerable<LeagueDTO> Leagues { get; set; } = [];
+
+    string SessionIsNullIcon(object? session)
+    {
+        return session == null ? Icons.Material.Filled.Close : Icons.Material.Filled.Done;
+    }
+
+    void Edit(Guid id)
+    {
+        Nav.NavigateTo($"/leagues/edit/{id}");
+    }
+
+    async Task OpenTrackSelect(Guid id)
+    {
+        var dialog = await DialogService.ShowAsync<ChangeTrackDialog>();
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await LeagueService.ChangeActiveTrack(id, (TrackDTO)result.Data);
+                SnackbarService.Add(severity: Severity.Success, message: "Successful track change");
+            }
+            catch (Exception e)
+            {
+                SnackbarService.Add(severity: Severity.Error, message: e.Message);
+            }
+        }
+    }
+    
+    async Task Delete(Guid id)
+    {
+        try
+        {
+            await LeagueService.DeleteLeague(id);
+            Leagues = Leagues.Where(x => x.Id != id);
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+
+    async Task OpenFillSession(Guid id)
+    {
+        var confirm = await DialogService.ShowAsync<ConfirmDialog>("Add sessions to the league", new DialogOptions()
+        {
+            CloseOnEscapeKey = false
+        });
+
+        var result = await confirm.Result;
+        
+        if (!result!.Canceled)
+        {
+            await LeagueService.AddSessions(id, (bool)result.Data!);
+            Leagues = await LeagueService.GetLeagues();
+        }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Leagues = await LeagueService.GetLeagues();
+        await base.OnInitializedAsync();
+    }
+
+}

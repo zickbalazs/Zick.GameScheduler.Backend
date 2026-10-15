@@ -1,0 +1,238 @@
+{
+  "Cars": [
+    {
+      "CarId": 0,
+      "CarModel": "ks_ferrari_488_gt3",
+      "DriverName": "John Smith",
+      "DriverGUID": "76561198012345678",
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "CarId": 1,
+      "CarModel": "ks_porsche_911_gt3_r_2016",
+      "DriverName": "Michael Brown",
+      "DriverGUID": "76561198123456789",
+      "BallastKG": 10,
+      "Restrictor": 0
+    },
+    {
+      "CarId": 2,
+      "CarModel": "ks_mercedes_amg_gt3",
+      "DriverName": "David Wilson",
+      "DriverGUID": "76561198234567890",
+      "BallastKG": 0,
+      "Restrictor": 5
+    },
+    {
+      "CarId": 3,
+      "CarModel": "ks_audi_r8_lms",
+      "DriverName": "Alex Johnson",
+      "DriverGUID": "76561198345678901",
+      "BallastKG": 20,
+      "Restrictor": 0
+    }
+  ],
+  "Events": [
+    {
+      "Type": "Collision",
+      "CarId": 2,
+      "OtherCarId": 3,
+      "Lap": 4
+    },
+    {
+      "Type": "Penalty",
+      "CarId": 1,
+      "Lap": 7,
+      "PenaltyTime": 5
+    }
+  ],
+  "Laps": [
+    {
+      "CarId": 0,
+      "Lap": 1,
+      "Time": 102345,
+      "Sectors": [
+        34120,
+        35210,
+        33015
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 0,
+      "Lap": 2,
+      "Time": 101872,
+      "Sectors": [
+        33980,
+        35002,
+        32890
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 0,
+      "Lap": 3,
+      "Time": 102115,
+      "Sectors": [
+        34005,
+        35120,
+        32990
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 1,
+      "Lap": 1,
+      "Time": 103210,
+      "Sectors": [
+        34350,
+        35510,
+        33350
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 1,
+      "Lap": 2,
+      "Time": 102845,
+      "Sectors": [
+        34200,
+        35380,
+        33265
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 1,
+      "Lap": 3,
+      "Time": 103015,
+      "Sectors": [
+        34310,
+        35420,
+        33285
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 2,
+      "Lap": 1,
+      "Time": 104550,
+      "Sectors": [
+        34780,
+        35910,
+        33860
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 2,
+      "Lap": 2,
+      "Time": 105230,
+      "Sectors": [
+        35020,
+        36100,
+        34110
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 2,
+      "Lap": 3,
+      "Time": 106110,
+      "Sectors": [
+        35300,
+        36320,
+        34490
+      ],
+      "Valid": false
+    },
+    {
+      "CarId": 3,
+      "Lap": 1,
+      "Time": 104120,
+      "Sectors": [
+        34650,
+        35720,
+        33750
+      ],
+      "Valid": true
+    },
+    {
+      "CarId": 3,
+      "Lap": 2,
+      "Time": 103890,
+      "Sectors": [
+        34520,
+        35640,
+        33730
+      ],
+      "Valid": true
+    }
+  ],
+  "Result": [
+    {
+      "BallastKG": 0,
+      "BestLap": 101872,
+      "CarId": 0,
+      "CarModel": "ks_ferrari_488_gt3",
+      "DriverGuid": "76561198012345678",
+      "DriverName": "John Smith",
+      "Restrictor": 0,
+      "TotalTime": 1234567,
+      "HasPenalty": false,
+      "PenaltyTime": 0,
+      "LapPenalty": 0,
+      "Disqualified": false
+    },
+    {
+      "BallastKG": 10,
+      "BestLap": 102845,
+      "CarId": 1,
+      "CarModel": "ks_porsche_911_gt3_r_2016",
+      "DriverGuid": "76561198123456789",
+      "DriverName": "Michael Brown",
+      "Restrictor": 0,
+      "TotalTime": 1240123,
+      "HasPenalty": true,
+      "PenaltyTime": 5000,
+      "LapPenalty": 0,
+      "Disqualified": false
+    },
+    {
+      "BallastKG": 0,
+      "BestLap": 104550,
+      "CarId": 2,
+      "CarModel": "ks_mercedes_amg_gt3",
+      "DriverGuid": "76561198234567890",
+      "DriverName": "David Wilson",
+      "Restrictor": 5,
+      "TotalTime": 1256789,
+      "HasPenalty": false,
+      "PenaltyTime": 0,
+      "LapPenalty": 0,
+      "Disqualified": false
+    },
+    {
+      "BallastKG": 20,
+      "BestLap": 103890,
+      "CarId": 3,
+      "CarModel": "ks_audi_r8_lms",
+      "DriverGuid": "76561198345678901",
+      "DriverName": "Alex Johnson",
+      "Restrictor": 0,
+      "TotalTime": 1265432,
+      "HasPenalty": false,
+      "PenaltyTime": 0,
+      "LapPenalty": 0,
+      "Disqualified": false
+    }
+  ],
+  "TrackConfig": "",
+  "TrackName": "ks_monza",
+  "Type": "R",
+  "Date": "2026-10-07T12:25:00Z",
+  "SessionFile": "261007_122500_R.json",
+  "ChampionshipID": "",
+  "RaceWeekendID": ""
+}

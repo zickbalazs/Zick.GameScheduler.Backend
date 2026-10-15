@@ -1,0 +1,98 @@
+﻿@page "/tracks/edit/{Id}"
+@using Zick.GameScheduler.Backend.Dashboard.Common
+@using Zick.GameScheduler.Backend.Data.Dashboard.Forms
+@using Zick.GameScheduler.Backend.Data.DTOs
+@using Zick.GameScheduler.Services.Data
+@inject NavigationManager NavManager
+@inject ITrackService TrackService
+@inject ISnackbar SnackbarService
+
+<PageTitle>ZGS | Edit Track</PageTitle>
+<TitleComponent Title="Edit Track"/>
+
+<MudForm>
+    <MudGrid Class="mb-3">
+        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
+            <MudTextField T="Guid"
+                          Label="Id"
+                          Value="Form.Id"
+                          Disabled="true"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
+            <MudTextField T="string"
+                          Label="Track Name"
+                          Placeholder="Hockenheimring"
+                          @bind-Value="Form.Name"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
+            <MudTextField T="string?"
+                          Label="Country Code"
+                          Placeholder="GER"
+                          @bind-Value="Form.CountryCode"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mb-3">
+        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
+            <MudTextField T="string"
+                          Label="Folder Name"
+                          Placeholder="hockenheimring"
+                          @bind-Value="Form.Folder"/>
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+        <MudItem>
+            <MudButton StartIcon="@Icons.Material.Filled.Check"
+                       Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       @onclick="Submit">Submit</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+
+@code {
+    [Parameter] public string Id { get; set; }
+
+    EditTrackForm Form { get; } = new()
+    {
+        Name = string.Empty,
+        CountryCode = null,
+        Folder = string.Empty
+    };
+
+    async Task Submit()
+    {
+
+        try
+        {
+            await TrackService.EditTrack(Form);
+            NavManager.NavigateTo("/tracks/overview");
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add(severity: Severity.Error, message: e.Message);
+        }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Form.Id = new Guid(Id);
+            TrackDTO track = await TrackService.GetTrack(Form.Id);
+            Form.Name = track.Name;
+            Form.CountryCode = track.CountryCode;
+            Form.Folder = track.Folder;
+        }
+        catch
+        {
+            NavManager.NavigateTo("/tracks/overview");
+        }
+        await base.OnInitializedAsync();
+    }
+
+}
