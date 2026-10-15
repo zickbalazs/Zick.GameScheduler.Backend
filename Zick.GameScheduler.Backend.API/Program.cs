@@ -50,6 +50,8 @@ builder.Services.AddCors(x =>
             frontendUrl
         ]);
         m.WithMethods(["GET", "POST", "PATCH"]);
+        m.WithHeaders(["Content-Type"]);
+        m.AllowCredentials();
     });
 });
 

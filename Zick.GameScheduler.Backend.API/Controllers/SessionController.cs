@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ public class SessionController(
         catch (Exception e)
         {
             var response = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(response.Code, response.Message);
+            return StatusCode(response.Code, response);
         }
     }
 
@@ -45,7 +46,7 @@ public class SessionController(
         catch (Exception e)
         {
             var response = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(response.Code, e.Message);
+            return StatusCode(response.Code, response);
         }
     }
 
@@ -69,15 +70,14 @@ public class SessionController(
             }
             catch (Exception e)
             {
-                if (e is UnauthorizedAccessException or ArgumentException)
+                if (e is MethodAccessException or UnauthorizedAccessException or DuplicateNameException)
                 {
-                    logger.LogWarning("unauthorized access was granted to endpoint, rejected registration");
-                    return Unauthorized();
+                    var response = new ExceptionDetail(400, e.Message);
+                    return StatusCode(response.Code, response);
                 }
-                logger.LogError("An unhandled error has occured with:\nmessage: {message}\nstack: {stack}",
-                    e.Message,
-                    e.StackTrace);
-                return StatusCode(500);
+
+                var serverError = new ExceptionDetail(500, e.Message);
+                return StatusCode(serverError.Code, serverError);
             }    
         }
     }

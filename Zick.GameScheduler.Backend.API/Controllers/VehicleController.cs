@@ -27,7 +27,7 @@ public class VehicleController(ILogger<VehicleController> logger, IVehicleServic
         catch (Exception e)
         {
             var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(error.Code, error.Message);
+            return StatusCode(error.Code, error);
         }
     }
 
@@ -45,7 +45,7 @@ public class VehicleController(ILogger<VehicleController> logger, IVehicleServic
         catch (Exception e)
         {
             var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(error.Code, error.Message);
+            return StatusCode(error.Code, error);
         }
     }
 }

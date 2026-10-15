@@ -17,16 +17,16 @@ public class LeagueController(ILogger<LeagueController> logger,
     {
         try
         {
-            var leagues = await leagueService.GetLeagues();
+            var leagues = (await leagueService.GetLeagues()).Where(x=>x.Name != "Custom Racing League");
             logger.LogInformation("[GET /league]: sent {leagueCount} leagues to {ip}", 
-                leagues.Count,
+                leagues.Count(),
                 HttpContext.Connection.RemoteIpAddress);
             return Ok(leagues);
         }
         catch (Exception e)
         {
             var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(error.Code, error.Message);
+            return StatusCode(error.Code, error);
         }
     }
 }

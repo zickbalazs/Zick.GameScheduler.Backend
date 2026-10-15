@@ -39,6 +39,12 @@ public class FirstMethodException(int code, string? message)
     }
 }
 
+public class ExceptionDetail(int code, string message)
+{
+    public string Message => message;
+    public int Code => code;
+}
+
 public class FirstMethodExceptionDetail(string message)
 {
     public string Message { get => message; }
