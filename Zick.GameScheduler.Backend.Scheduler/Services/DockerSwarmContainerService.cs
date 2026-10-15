@@ -2,6 +2,7 @@
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
@@ -10,6 +11,7 @@ using Zick.GameScheduler.Services.Generators;
 namespace Zick.GameScheduler.Backend.Scheduler.Services;
 
 public class DockerSwarmContainerService(IDockerClient client,
+    IConfiguration config,
     IPortClaimService portClaimService,
     IEntryGenerator<RacingUserIdentity> entryGenerator, 
     ApplicationContext<RacingUserIdentity> ctx,
@@ -33,13 +35,23 @@ public class DockerSwarmContainerService(IDockerClient client,
         logger.LogInformation("[session {sessionId}]: Started service for race with id {serviceId}", 
             sessionId,
             serviceResponse.ID);
-        
+
+        var tasks = await client.Tasks.ListAsync();
+
+        var task = tasks.First(x=>x.ServiceID == serviceResponse.ID);
+
+        await Task.Delay(10000);
+
         return serviceResponse.ID;
     }
 
-    public Task StopContainerForSession(Guid sessionId, string containerId)
+    public async Task StopContainerForSession(Guid sessionId, string containerId)
     {
-        throw new NotImplementedException();
+        var tasks = await client.Tasks.ListAsync();
+        await ExtractResults(sessionId, 
+            tasks.First(x => x.ServiceID == containerId).Status.ContainerStatus.ContainerID);
+        await client.Swarm.RemoveServiceAsync(containerId);
+        await client.Configs.RemoveConfigAsync($"{sessionId}-config");
     }
 
     public Task RecoverContainerForSession(Guid sessionId, string containerId)
@@ -47,6 +59,23 @@ public class DockerSwarmContainerService(IDockerClient client,
         throw new NotImplementedException();
     }
 
+    private async Task ExtractResults(Guid sessionId, string containerId)
+    {
+        var archive = await client.Containers.GetArchiveFromContainerAsync(containerId, new()
+        {
+            Path = "/opt/app/assetto-dedicated/server/results" 
+        }, false);
+
+        string path = Path.Join(config.GetValue<string>("Results:Path"), sessionId.ToString(), "results.tar");
+        
+        
+        using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate))
+        {
+            await archive.Stream.CopyToAsync(fileStream);
+        }
+    }
+    
+    
     private async Task<string> CreateEntryListForSession(Guid sessionId, string entryListContents)
     {
         var configId = await client.Configs.CreateConfigAsync(new()

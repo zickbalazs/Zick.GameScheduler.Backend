@@ -1,5 +1,6 @@
 ﻿using Docker.DotNet;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Zick.GameScheduler.Backend.Data;
@@ -26,15 +27,15 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
                 .Include(x=>x.Registrations)
                 .First(x => x.Id == sessionId);
 
-            if (session.Registrations.Count < 2)
-            {
-                logger.LogWarning(
-                    "[startJob | session: {sessionId}]: stopping startup for session, not enough registrations",
-                    sessionId);
-                session.Status = SessionStatus.Cancelled;
-                await ctx.SaveChangesAsync();
-                return;
-            }
+            // if (session.Registrations.Count < 2)
+            // {
+            //     logger.LogWarning(
+            //         "[startJob | session: {sessionId}]: stopping startup for session, not enough registrations",
+            //         sessionId);
+            //     session.Status = SessionStatus.Cancelled;
+            //     await ctx.SaveChangesAsync();
+            //     return;
+            // }
         }
         
         await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);
