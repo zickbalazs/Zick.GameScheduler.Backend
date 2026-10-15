@@ -30,13 +30,12 @@ public static class SwarmUtils
                         "-c",
                         "echo swarm-full-started; sleep 30 ; cat -n /opt/app/assetto-dedicated/server/cfg/entry_list.ini ; /bin/sh /opt/app/assetto-dedicated/entrypoint.sh"
                     },
-                    
                     Configs = new List<SwarmConfigReference>()
                     {
                         new()
                         {
                             ConfigID = configId,
-                            ConfigName = $"{sessionId}-initial",
+                            ConfigName = $"{sessionId}-config",
                             File = new()
                             {
                                 Name = "/opt/app/assetto-dedicated/server/cfg/entry_list.ini",

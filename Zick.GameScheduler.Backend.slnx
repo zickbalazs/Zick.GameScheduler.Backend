@@ -5,4 +5,5 @@
   <Project Path="Zick.GameScheduler.Backend.Scheduler/Zick.GameScheduler.Backend.Scheduler.csproj" />
   <Project Path="Zick.GameScheduler.Backend.Tests/Zick.GameScheduler.Backend.Tests.csproj" />
   <Project Path="Zick.GameScheduler.Services/Zick.GameScheduler.Services.csproj" />
+  <Project Path="Zick.GameScheduler.SessionWorker/Zick.GameScheduler.SessionWorker.csproj" />
 </Solution>
