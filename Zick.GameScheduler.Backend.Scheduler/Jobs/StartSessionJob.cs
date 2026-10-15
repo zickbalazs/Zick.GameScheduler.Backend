@@ -36,6 +36,12 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
                 await ctx.SaveChangesAsync();
                 return;
             }
+
+            if (session.Status == SessionStatus.Cancelled)
+            {
+                logger.LogInformation("[startJob | session: {sessionId}]: session was cancelled, stopping session.",
+                    sessionId);
+            }
         }
         
         await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);
