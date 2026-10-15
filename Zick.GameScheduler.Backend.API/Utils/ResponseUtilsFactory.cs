@@ -19,7 +19,7 @@ public class ResponseUtilsFactory(ILogger logger)
         logger.LogError("an unhandled exception has occured:\nmessage: {errorMessage}\nstack:{stackTrace}",
             e.Message,
             e.StackTrace);
-        return new FirstMethodException(500, "A database error has occured, contact the administrators.");
+        return new FirstMethodException(500, new ("A database error has occured."));
     }
     
 }
@@ -27,5 +27,25 @@ public class ResponseUtilsFactory(ILogger logger)
 public class FirstMethodException(int code, string? message)
 {
     public int Code { get; } = code;
-    public string? Message { get; } = message;
+
+    public FirstMethodExceptionDetail? Message
+    {
+        get
+        {
+            if (message != null)
+                return new(message);
+            return null;
+        }
+    }
+}
+
+public class ExceptionDetail(int code, string message)
+{
+    public string Message => message;
+    public int Code => code;
+}
+
+public class FirstMethodExceptionDetail(string message)
+{
+    public string Message { get => message; }
 }

@@ -26,7 +26,7 @@ public class TrackController(ILogger<TrackController> logger, ITrackService trac
         catch (Exception e)
         {
             var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(error.Code, error.Message);
+            return StatusCode(error.Code, error);
         }
     }
 
@@ -42,7 +42,7 @@ public class TrackController(ILogger<TrackController> logger, ITrackService trac
         catch (Exception e)
         {
             var error = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
-            return StatusCode(error.Code, error.Message);
+            return StatusCode(error.Code, error);
         }
     }
 }

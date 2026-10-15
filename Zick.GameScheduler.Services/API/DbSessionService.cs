@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Zick.GameScheduler.Backend.Data;
@@ -10,7 +11,9 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
 {
     public async Task<SessionDTO> GetSession(Guid id)
     {
-        var session = await ctx.Sessions.FirstAsync(x => x.Id == id);
+        var session = await ctx.Sessions
+            .Include(x=>x.Registrations)
+            .FirstAsync(x => x.Id == id);
         return session;
     }
 
@@ -46,23 +49,52 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
 
     public async Task<IList<SessionDTO>> GetCustomSessions()
     {
-        throw new NotImplementedException();
+        var sessions = await ctx.Sessions
+            .Include(x => x.League)
+            .Include(x => x.Registrations)
+            .ThenInclude(x => x.User)
+            .Where(x => x.League.Name == "Custom Racing League")
+            .ToListAsync();
+
+        return [ ..sessions ];
     }
 
-    public async Task RegisterToSession(Guid sessionId, string userId)
+    public async Task RegisterToSession(Guid sessionId, string userId, Guid carId)
     {
-        throw new NotImplementedException();
+        var session = ctx.Sessions
+                .Include(x=>x.Registrations)
+                .ThenInclude(m=>m.User)
+                .Include(x=>x.League)
+                .ThenInclude(m=>m.Classes)
+                .ThenInclude(m=>m.Cars)
+                .First(x => x.Id == sessionId);
+
+        if (session.Status != SessionStatus.Waiting)
+            throw new MethodAccessException("Registration to this session is not allowed.");
+
+        bool carAllowed = session.League.Classes
+            .Any(x => x.Cars.Any(m => m.Id == carId));
+
+        if (!carAllowed)
+            throw new UnauthorizedAccessException("Registration to the session with this car is not allowed!");
+
+        if (session.Registrations.Any(x => x.User.Id == userId))
+            throw new DuplicateNameException("Registration to this session was already done");
+
+        ctx.Registrations.Add(new()
+        {
+            User = ctx.Users.First(x=>x.Id == userId),
+            Session = session,
+            Car = ctx.Cars.First(x=>x.Id == carId)
+        });
+        await ctx.SaveChangesAsync();
     }
 
     public async Task UnregisterFromSession(Guid sessionId, string userId)
     {
         throw new NotImplementedException();
     }
-
-    /// <exception cref="ArgumentNullException">When <c>null</c> is given as any of the parameters</exception>
-    /// <exception cref="InvalidOperationException">When either the registration, or the car was not found</exception>
-    /// <exception cref="DbUpdateException">When saving to the database didn't happen</exception>
-    /// <exception cref="DbUpdateConcurrencyException">When the locks are stuck, no changes happen</exception>
+    
     public async Task AlterRegistrationToSession(Guid sessionId, string userId, Guid newVehicleId)
     {
         var registration = await ctx.Registrations

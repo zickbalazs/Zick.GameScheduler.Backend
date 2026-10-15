@@ -22,8 +22,17 @@ public class DbLeagueService(ApplicationContext<RacingUserIdentity> ctx) : ILeag
         return [.. leagues];
     }
 
-    public Task<LeagueDTO> GetLeague(Guid id)
+    public async Task<LeagueDTO> GetLeague(Guid id)
     {
-        throw new NotImplementedException();
+        var league = await ctx.Leagues
+            .Include(x => x.Sessions)
+            .ThenInclude(x => x.Registrations)
+            .ThenInclude(x => x.User)
+            .Include(x => x.Sessions)
+            .ThenInclude(x => x.PortClaim)
+            .Include(x => x.CurrentTrack)
+            .Include(x => x.Classes)
+            .FirstAsync(x => x.Id == id);
+        return league;
     }
 }
