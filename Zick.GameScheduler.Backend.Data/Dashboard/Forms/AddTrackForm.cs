@@ -5,4 +5,5 @@ public class AddTrackForm
     public string Name { get; set; }
     public string? CountryCode { get; set; }
     public string Folder { get; set; }
+    public int MaxParticipants { get; set; }
 }
