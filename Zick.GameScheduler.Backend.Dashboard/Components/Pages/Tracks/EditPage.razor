@@ -11,46 +11,36 @@
 <TitleComponent Title="Edit Track"/>
 
 <MudForm>
-    <MudGrid Class="mb-3">
-        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
-            <MudTextField T="Guid"
-                          Label="Id"
-                          Value="Form.Id"
-                          Disabled="true"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid Class="mb-3">
-        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
-            <MudTextField T="string"
-                          Label="Track Name"
-                          Placeholder="Hockenheimring"
-                          @bind-Value="Form.Name"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid Class="mb-3">
-        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
-            <MudTextField T="string?"
-                          Label="Country Code"
-                          Placeholder="GER"
-                          @bind-Value="Form.CountryCode"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid Class="mb-3">
-        <MudItem xs="@Constants.GridXsSize" md="@Constants.GridMdSize">
-            <MudTextField T="string"
-                          Label="Folder Name"
-                          Placeholder="hockenheimring"
-                          @bind-Value="Form.Folder"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid>
-        <MudItem>
-            <MudButton StartIcon="@Icons.Material.Filled.Check"
-                       Variant="Variant.Outlined"
-                       Color="Color.Primary"
-                       @onclick="Submit">Submit</MudButton>
-        </MudItem>
-    </MudGrid>
+    <MudContainer Gutters="false" MaxWidth="MaxWidth.Medium">
+        <MudTextField T="Guid"
+                      Label="Id"
+                      Value="Form.Id"
+                      Disabled="true"
+                      Class="mb-3"/>
+        <MudTextField T="string"
+                      Label="Track Name"
+                      Placeholder="Hockenheimring"
+                      @bind-Value="Form.Name"
+                      Class="mb-3"/>
+        <MudTextField T="string?"
+                      Label="Country Code"
+                      Placeholder="GER"
+                      @bind-Value="Form.CountryCode"
+                      Class="mb-3"/>
+        <MudTextField T="string"
+                      Label="Folder Name"
+                      Placeholder="hockenheimring"
+                      @bind-Value="Form.Folder"
+                      Class="mb-3"/>
+        <MudNumericField @bind-Value="Form.MaxParticipants"
+                         Label="Max Participants"
+                         Min="0"
+                         Class="mb-3"/>
+        <MudButton StartIcon="@Icons.Material.Filled.Check"
+                   Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   @onclick="Submit">Submit</MudButton>    
+    </MudContainer>
 </MudForm>
 
 
@@ -87,6 +77,7 @@
             Form.Name = track.Name;
             Form.CountryCode = track.CountryCode;
             Form.Folder = track.Folder;
+            Form.MaxParticipants = track.MaxCapacity;
         }
         catch
         {

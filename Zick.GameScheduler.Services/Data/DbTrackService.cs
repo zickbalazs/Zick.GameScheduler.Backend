@@ -15,7 +15,8 @@ public class DbTrackService(IDbContextFactory<ApplicationContext<RacingUserIdent
         {
             FolderName = form.Folder,
             Name = form.Name,
-            CountryCode = form.CountryCode
+            CountryCode = form.CountryCode,
+            MaxCapacity = form.MaxParticipants
         };
 
         await using (var ctx = await ctxFactory.CreateDbContextAsync())
@@ -41,6 +42,7 @@ public class DbTrackService(IDbContextFactory<ApplicationContext<RacingUserIdent
             trackEntry.FolderName = form.Folder;
             trackEntry.Name = form.Name;
             trackEntry.CountryCode = form.CountryCode;
+            trackEntry.MaxCapacity = form.MaxParticipants;
 
             await ctx.SaveChangesAsync();
         }

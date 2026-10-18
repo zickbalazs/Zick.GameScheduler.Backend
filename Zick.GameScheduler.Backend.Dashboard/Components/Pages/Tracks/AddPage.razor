@@ -9,37 +9,31 @@
 <TitleComponent Title="Add new track"/>
 
 <MudForm @bind="FormElement">
-    <MudGrid Class="mb-3">
-        <MudItem xs="12" md="8">
-            <MudTextField T="string"
-                          @bind-Value="Form.Name"
-                          Label="Track Name"
-                          Placeholder="Hockenheim"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid Class="mb-3">
-        <MudItem xs="12" md="8">
-            <MudTextField T="string"
-                          @bind-Value="Form.CountryCode"
-                          Label="Country Code (optional)"
-                          Placeholder="GER"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid Class="mb-3">
-        <MudItem xs="12" md="8">
-            <MudTextField T="string"
-                          @bind-Value="Form.Folder"
-                          Label="Folder Name"
-                          Placeholder="ks_hockenheim"/>
-        </MudItem>
-    </MudGrid>
-    <MudGrid>
-        <MudItem>
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Primary"
-                       @onclick="Submit">Submit</MudButton>
-        </MudItem>
-    </MudGrid>
+    <MudContainer Gutters="false" Class="ms-0" MaxWidth="MaxWidth.Medium">
+        <MudTextField T="string"
+                      @bind-Value="Form.Name"
+                      Label="Track Name"
+                      Class="mb-3"
+                      Placeholder="Hockenheim"/>
+        <MudTextField T="string"
+                      @bind-Value="Form.CountryCode"
+                      Label="Country Code (optional)"
+                      Class="mb-3"
+                      Placeholder="GER"/>
+        <MudTextField T="string"
+                      @bind-Value="Form.Folder"
+                      Label="Folder Name"
+                      Class="mb-3"
+                      Placeholder="ks_hockenheim"/>
+        <MudNumericField Label="MaxParticipants"
+                         @bind-Value="Form.MaxParticipants"
+                         Class="mb-3"
+                         Min="0"/>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   @onclick="Submit">Submit
+        </MudButton>    
+    </MudContainer>
 </MudForm>
 
 

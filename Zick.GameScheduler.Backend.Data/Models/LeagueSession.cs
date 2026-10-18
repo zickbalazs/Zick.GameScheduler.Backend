@@ -11,7 +11,7 @@ public class LeagueSession<TUserIdentity> where TUserIdentity : IdentityUser
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
-    public SessionStatus Status { get; set; } = SessionStatus.Waiting;    
+    public SessionStatus Status { get; set; } = SessionStatus.Created;    
     public DateTime Start { get; set; }
 
     // Relations

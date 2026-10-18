@@ -407,6 +407,9 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                     b.Property<bool>("IsInUse")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ServerPassword")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("PortClaims");

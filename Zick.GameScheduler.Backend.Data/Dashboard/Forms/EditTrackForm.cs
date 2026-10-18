@@ -5,5 +5,6 @@ public class EditTrackForm
     public Guid Id { get; set; }
     public string Name { get; set; }
     public string? CountryCode { get; set; }
+    public int MaxParticipants { get; set; }
     public string Folder { get; set; }
 }

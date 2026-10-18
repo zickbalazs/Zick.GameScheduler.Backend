@@ -145,7 +145,6 @@ public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIden
             {
                 ctx.Sessions.Add(new()
                 {
-                    Status = SessionStatus.Waiting,
                     Start = time,
                     League = league,
                     Track = null,

@@ -50,6 +50,7 @@ builder.Services.AddScoped<IVehicleService, DbVehicleService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
 builder.Services.AddScoped<IRacingClassService, DbRacingClassService>();
 builder.Services.AddScoped<ILeagueService, DbLeagueService>();
+builder.Services.AddScoped<ISessionService, DbSessionService>();
 
 
 builder.Services.AddRazorComponents()
