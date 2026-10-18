@@ -23,7 +23,7 @@ public class SessionController(
     UserManager<RacingUserIdentity> userManager) : ControllerBase
 {
     [HttpGet("league/{leagueId}")]
-    public async Task<ActionResult<SessionDTO>> GetSessionsForLeague(Guid leagueId)
+    public async Task<ActionResult<IList<SessionDTO>>> GetSessionsForLeague(Guid leagueId)
     {
         try
         {
@@ -33,6 +33,41 @@ public class SessionController(
         {
             var response = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
             return StatusCode(response.Code, response);
+        }
+    }
+
+    [HttpGet("league/available/{leagueId}")]
+    public async Task<ActionResult<IEnumerable<SessionDTO>>> GetAvailableSessionsForLeague(Guid leagueId)
+    {
+        try
+        {
+            var sessions = await sessionService.GetSessionsByLeagueId(leagueId);
+            return Ok(sessions.Where(x => x.Status == SessionStatus.Waiting));
+        }
+        catch (Exception e)
+        {
+            ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(Response.StatusCode, Response);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("registered")]
+    public async Task<ActionResult<IEnumerable<SessionDTO>>> GetRegisteredSessions()
+    {
+        try
+        {
+            if (User == null || User.Identity == null || User.Identity.Name == null)
+            {
+                throw new InvalidOperationException();
+            }
+            var user = await userManager.FindByNameAsync(User.Identity.Name) ?? throw new InvalidOperationException();
+            return Ok(await sessionService.GetRegisteredSessions(user.Id));
+        }
+        catch (Exception e)
+        {
+            var res = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(res.Code, res);
         }
     }
 

@@ -47,7 +47,7 @@ public class UserController(ILogger<UserController> logger, UserManager<RacingUs
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> GetUserData()
+    public async Task<ActionResult<UserData>> GetUserData()
     {
         if (User.Identity == null || User.Identity.Name == null)
             return Unauthorized();

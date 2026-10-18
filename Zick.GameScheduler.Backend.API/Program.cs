@@ -40,7 +40,6 @@ builder.Services.AddControllers();
 
 string backendUrl = builder.Configuration.GetValue<string>("Cors:BackendURL") ?? throw new ArgumentException("Backend url must be set"),
        frontendUrl = builder.Configuration.GetValue<string>("Cors:FrontendURL") ?? throw new ArgumentException("Frontend url must be set") ;
-
 builder.Services.AddCors(x =>
 {
     x.AddDefaultPolicy(m =>
@@ -49,6 +48,7 @@ builder.Services.AddCors(x =>
             backendUrl,
             frontendUrl
         ]);
+        m.SetIsOriginAllowed((host) => true);
         m.WithMethods(["GET", "POST", "PATCH"]);
         m.WithHeaders(["Content-Type"]);
         m.AllowCredentials();
@@ -98,6 +98,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 app.MapIdentityApi<RacingUserIdentity>();
 app.MapControllers();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHub<RegistrationHub>("/hub/sessions");
 app.UseHttpsRedirection();
 
