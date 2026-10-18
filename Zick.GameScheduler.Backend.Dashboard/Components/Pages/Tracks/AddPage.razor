@@ -8,7 +8,7 @@
 <PageTitle>ZGS | Add track</PageTitle>
 <TitleComponent Title="Add new track"/>
 
-<MudForm @bind="FormElement">
+<MudForm>
     <MudContainer Gutters="false" Class="ms-0" MaxWidth="MaxWidth.Medium">
         <MudTextField T="string"
                       @bind-Value="Form.Name"
@@ -39,7 +39,6 @@
 
 @code {
     AddTrackForm Form { get; } = new();
-    MudForm FormElement { get; set; }
     async Task Submit()
     {  
         try
