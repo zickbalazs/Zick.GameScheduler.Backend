@@ -32,6 +32,8 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
         var sessionsByUser = await ctx.Sessions
             .Include(m => m.Registrations)
             .ThenInclude(m=>m.User)
+            .Include(x=>x.Registrations)
+            .ThenInclude(m=>m.Car)
             .Where(x=> x.Registrations.Any(m=>m.User.Id == userId))
             .ToListAsync();
 

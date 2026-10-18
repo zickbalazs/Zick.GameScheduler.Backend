@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Zick.GameScheduler.Backend.Data.Models;
@@ -42,6 +43,27 @@ public class UserController(ILogger<UserController> logger, UserManager<RacingUs
             return StatusCode(500, "A server error has occured, contact the administrators!");
         }
     }
+
+
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<UserData>> GetUserData()
+    {
+        if (User.Identity == null || User.Identity.Name == null)
+            return Unauthorized();
+
+        var user = await userManager.FindByNameAsync(User.Identity.Name);
+
+        if (user == null)
+            return Unauthorized();
+
+        return Ok(new UserData()
+        {
+          Name  = user!.UserName!,
+          Email = user!.Email!
+        });
+
+    }
 }
 
 
@@ -52,4 +74,10 @@ public class RegistrationBody
     public string UserName { get; set; }
     public string Password { get; set; }
     public string SteamID { get; set; }
+}
+
+public class UserData
+{
+    public string Email { get; set; }
+    public string Name { get; set; }
 }
