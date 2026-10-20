@@ -13,18 +13,24 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
     {
         var session = await ctx.Sessions
             .Include(x=>x.Registrations)
+            .ThenInclude(x=>x.User)
+            .Include(x=>x.League)
+            .Include(x=>x.Track)
             .FirstAsync(x => x.Id == id);
         return session;
     }
 
     public async Task<IList<SessionDTO>> GetSessionsByLeagueId(Guid leagueId)
     {
-        var league = await ctx.Leagues
-            .Include(m=>m.Sessions)
-            .ThenInclude(m=>m.Registrations)
-            .FirstAsync(x => x.Id == leagueId);
+        var sessions = await ctx.Sessions
+            .Include(x => x.Registrations)
+            .ThenInclude(x=>x.User)
+            .Include(x=>x.League)
+            .Include(x=>x.Track)
+            .Where(x => x.League.Id == leagueId)
+            .ToListAsync();
 
-        return [ ..league.Sessions ];
+        return [ ..sessions ];
     }
 
     public async Task<IList<SessionDTO>> GetRegisteredSessions(string userId)
@@ -66,6 +72,8 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
         var session = ctx.Sessions
                 .Include(x=>x.Registrations)
                 .ThenInclude(m=>m.User)
+                .Include(x=>x.Registrations)
+                .ThenInclude(x=>x.Car)
                 .Include(x=>x.League)
                 .ThenInclude(m=>m.Classes)
                 .ThenInclude(m=>m.Cars)
@@ -111,5 +119,25 @@ public class DbSessionService(ApplicationContext<RacingUserIdentity> ctx) : ISes
 
         await ctx.SaveChangesAsync();
     }
-    
+
+    public async Task<ConnectionDTO> GetConnectionForSession(Guid sessionId)
+    {
+        var session = ctx.Sessions
+            .Include(x => x.PortClaim)
+            .First(x => x.Id == sessionId);
+
+        if (session.PortClaim == null)
+            throw new InvalidOperationException();
+
+        if (!session.PortClaim.IsInUse)
+            throw new InvalidOperationException();
+
+
+        return new()
+        {
+            Port = session.PortClaim.ClaimedPort,
+            Password = session.PortClaim.ServerPassword
+        };
+
+    }
 }

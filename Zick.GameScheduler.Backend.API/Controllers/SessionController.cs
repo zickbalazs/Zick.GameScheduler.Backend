@@ -42,7 +42,7 @@ public class SessionController(
         try
         {
             var sessions = await sessionService.GetSessionsByLeagueId(leagueId);
-            return Ok(sessions.Where(x => x.Status == SessionStatus.Waiting));
+            return Ok(sessions.Where(x=>x.Status == SessionStatus.Waiting));
         }
         catch (Exception e)
         {
@@ -51,6 +51,20 @@ public class SessionController(
         }
     }
 
+    [HttpGet("connect/{sessionId}")]
+    public async Task<ActionResult> GetSessionConnectionData(Guid sessionId)
+    {
+        try
+        {
+            return Ok(await sessionService.GetConnectionForSession(sessionId));
+        }
+        catch (Exception e)
+        {
+            var res = Utils.ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(res.Code, res);
+        }
+    }
+    
     [Authorize]
     [HttpGet("registered")]
     public async Task<ActionResult<IEnumerable<SessionDTO>>> GetRegisteredSessions()
@@ -87,7 +101,7 @@ public class SessionController(
 
     [Authorize]
     [HttpPost("register/{sessionId}")]
-    public async Task<ActionResult<bool>> RegisterForSession(Guid sessionId, [FromBody] SessionRegisterBody details)
+    public async Task<IActionResult> RegisterForSession(Guid sessionId, [FromBody] SessionRegisterBody details)
     {
         using (logger.BeginScope("[POST /register/{sessionId}]: ", sessionId))
         {
@@ -101,7 +115,11 @@ public class SessionController(
                 logger.LogInformation("Registered user {userId} to session with car: {carId}",
                     userId,
                     details.CarId);
-                return Ok(true);
+                var response = new
+                {
+                    Success = true
+                };
+                return Ok(response);
             }
             catch (Exception e)
             {

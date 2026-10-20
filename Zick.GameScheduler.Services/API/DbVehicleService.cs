@@ -21,4 +21,9 @@ public class DbVehicleService(ApplicationContext<RacingUserIdentity> ctx) : IVeh
     {
         return [.. (await ctx.Cars.ToListAsync())];
     }
+
+    public async Task<CarDTO> GetCar(Guid id)
+    {
+        return await ctx.Cars.FirstAsync(x => x.Id == id);
+    }
 }

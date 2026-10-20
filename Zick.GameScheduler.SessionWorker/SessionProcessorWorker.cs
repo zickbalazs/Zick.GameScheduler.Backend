@@ -17,7 +17,7 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
         {
             logger.LogInformation("started session collection");
             await DoWork();
-            await Task.Delay(15000, stoppingToken);
+            await Task.Delay(60000, stoppingToken);
         }
     }
 

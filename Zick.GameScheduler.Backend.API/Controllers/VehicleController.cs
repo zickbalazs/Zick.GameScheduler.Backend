@@ -31,6 +31,22 @@ public class VehicleController(ILogger<VehicleController> logger, IVehicleServic
         }
     }
 
+    [HttpGet("byId/{id}")]
+    public async Task<ActionResult<CarDTO>> GetVehicle(Guid id)
+    {
+        try
+        {
+            CarDTO car = await vehicleService.GetCar(id);
+            logger.LogInformation("[GET /{carId}]: sent car", id);
+            return Ok(car);
+        }
+        catch (Exception e)
+        {
+            var res = Utils.ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(res.Code, res);
+        }
+    }
+    
     [HttpGet]
     public async Task<ActionResult<CarDTO>> GetVehicles()
     {

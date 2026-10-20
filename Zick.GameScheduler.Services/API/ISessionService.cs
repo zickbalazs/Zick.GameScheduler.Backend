@@ -12,4 +12,5 @@ public interface ISessionService
     Task RegisterToSession(Guid sessionId, string userId, Guid vehicleId);
     Task UnregisterFromSession(Guid sessionId, string userId);
     Task AlterRegistrationToSession(Guid sessionId, string userId, Guid newVehicleId);
+    Task<ConnectionDTO> GetConnectionForSession(Guid sessionId);
 }

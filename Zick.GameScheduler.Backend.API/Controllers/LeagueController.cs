@@ -29,4 +29,18 @@ public class LeagueController(ILogger<LeagueController> logger,
             return StatusCode(error.Code, error);
         }
     }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<IList<LeagueDTO>>> GetLeague(Guid id)
+    {
+        try
+        {
+            return Ok(await leagueService.GetLeague(id));
+        }
+        catch (Exception e)
+        {
+            var res = ResponseUtilsFactory.Create(logger).HandleFirstMethodException(e);
+            return StatusCode(res.Code, res);
+        }
+    }
 }

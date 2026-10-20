@@ -21,6 +21,19 @@ public class ResponseUtilsFactory(ILogger logger)
             e.StackTrace);
         return new FirstMethodException(500, new ("A database error has occured."));
     }
+
+    public ExceptionDetail HandleAuthExceptions(Exception e)
+    {
+        if (e is ArgumentNullException or InvalidOperationException)
+        {
+            return new (400, e.Message);
+        }
+
+        if (e is UnauthorizedAccessException)
+            return new(401, e.Message);
+
+        return new(500, "An unhandled error has occured, contact the administrators.");
+    }
     
 }
 
