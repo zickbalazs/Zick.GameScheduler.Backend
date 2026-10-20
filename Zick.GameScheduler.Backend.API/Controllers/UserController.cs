@@ -8,7 +8,9 @@ namespace Zick.GameScheduler.Backend.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UserController(ILogger<UserController> logger, UserManager<RacingUserIdentity> userManager) : ControllerBase
+public class UserController(ILogger<UserController> logger,
+    UserManager<RacingUserIdentity> userManager,
+    SignInManager<RacingUserIdentity> signInManager) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> RegisterUser([FromBody] RegistrationBody data)
@@ -63,6 +65,12 @@ public class UserController(ILogger<UserController> logger, UserManager<RacingUs
           Email = user!.Email!
         });
 
+    }
+    [HttpGet("logout")]
+    public async Task<ActionResult> Logout()
+    {
+        await signInManager.SignOutAsync();
+        return Ok();
     }
 }
 

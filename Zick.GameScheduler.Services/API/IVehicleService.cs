@@ -6,4 +6,5 @@ public interface IVehicleService
 {
     Task<IList<CarDTO>> GetCarsByClass(string classId);
     Task<IList<CarDTO>> GetCars();
+    Task<CarDTO> GetCar(Guid id);
 }

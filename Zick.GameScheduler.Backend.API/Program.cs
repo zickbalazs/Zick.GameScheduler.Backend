@@ -49,7 +49,7 @@ builder.Services.AddCors(x =>
             frontendUrl
         ]);
         m.SetIsOriginAllowed((host) => true);
-        m.WithMethods(["GET", "POST", "PATCH"]);
+        m.WithMethods(["GET", "POST", "PATCH", "DELETE"]);
         m.WithHeaders(["Content-Type"]);
         m.AllowCredentials();
     });
@@ -77,7 +77,7 @@ builder.Services.AddScoped<ISessionService, DbSessionService>();
 builder.Services.AddScoped<ILeagueService, DbLeagueService>();
 builder.Services.AddScoped<IResultService, DbResultService>();
 builder.Services.AddScoped<ITrackService, DbTrackService>();
-
+builder.Services.AddScoped<IRegistrationService, DbRegistrationService>();
 // AUTH
 builder.Services.AddIdentityApiEndpoints<RacingUserIdentity>()
     .AddEntityFrameworkStores<ApplicationContext<RacingUserIdentity>>();

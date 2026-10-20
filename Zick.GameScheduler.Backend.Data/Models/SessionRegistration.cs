@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
+using Zick.GameScheduler.Backend.Data.DTOs;
 
 namespace Zick.GameScheduler.Backend.Data.Models;
 
@@ -21,6 +22,17 @@ public class SessionRegistration<TUser> where TUser : IdentityUser
                $"GUID={steamId}\n" +
                $"SPECTATOR_MODE=0\n" +
                $"BALLAST=0";
+    }
+
+    public static implicit operator RegistrationDTO(SessionRegistration<TUser> registration)
+    {
+        return new()
+        {
+            Id = registration.Id,
+            CarId = registration.Car.Id,
+            SessionId = registration.Session.Id,
+            Locked = registration.Session.Status != SessionStatus.Waiting
+        };
     }
     
 }
