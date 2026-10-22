@@ -4,7 +4,7 @@
 @inject IVehicleService VehicleService
 @inject ISnackbar SnackbarService
 @inject NavigationManager NavManager
-
+@inject ILogger<Cars.AddPage> Logger
 
 <PageTitle>ZGS | Add new vehicle</PageTitle>
 <TitleComponent Title="Add new vehicle"/>
@@ -61,6 +61,7 @@
         try
         {
             await VehicleService.AddVehicle(Form);
+            Logger.LogInformation("a car has been added ({carName})", Form.Model);
             NavManager.NavigateTo("/vehicles/overview");
         }
         catch (Exception e)

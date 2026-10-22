@@ -19,51 +19,57 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
     public async Task Execute(IJobExecutionContext context)
     {
         Guid sessionId = new Guid(context.JobDetail.Key.Name);
+        logger.LogInformation("[startJob | session: {sessionId}]: job start", sessionId);
 
         await using (var ctx = await contextFactory.CreateDbContextAsync())
         {
-            logger.LogInformation("[startJob | session: {sessionId}]: checking registration count", sessionId);
             var session = ctx.Sessions
                 .Include(x=>x.Registrations)
+                .Include(x=>x.League)
+                .ThenInclude(x=>x.CurrentTrack)
                 .First(x => x.Id == sessionId);
 
             if (session.Registrations.Count < 2)
             {
+                await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Cancelled);
                 logger.LogWarning(
                     "[startJob | session: {sessionId}]: stopping startup for session, not enough registrations",
                     sessionId);
-                session.Status = SessionStatus.Cancelled;
-                await ctx.SaveChangesAsync();
                 return;
             }
 
             if (session.Status == SessionStatus.Cancelled)
             {
-                logger.LogInformation("[startJob | session: {sessionId}]: session was cancelled, stopping session.",
+                logger.LogWarning("[startJob | session: {sessionId}]: session was cancelled while waiting",
                     sessionId);
+                return;
             }
+
+            session.Track = session.League.CurrentTrack;
+            await ctx.SaveChangesAsync();
         }
         
         await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);
-        logger.LogInformation("[startJob | session: {sessionId}]: Pre-checks done, starting job for session", sessionId);
-        
+
         try
         {
             var containerId = await containerService.StartContainerForSession(sessionId);
-            await CreateWatchJob(containerId, sessionId);
+            logger.LogInformation("[startJob | session: {sessionId}]: session start succeeded, starting watch job",
+                sessionId);
             await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Underway);
+            await CreateWatchJob(containerId, sessionId);
         }
         catch (Exception e)
         {
-            logger.LogError("[startJob | session: {sessionId}]: Session start failed with message {message}\nstack: {stack}",
-                sessionId,
-                e.Message,
-                e.StackTrace);
             await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Error);
             await portClaimService.EndClaimForSession(sessionId);
             await containerService.DeleteConfForSession(sessionId);
+            logger.LogError(e, "[startJob | session: {sessionId}]: Session start failed", sessionId);
         }
-
+        finally
+        {
+            logger.LogInformation("[startJob | session: {sessionId}]: start job end", sessionId);
+        }
     }
 
     private async Task CreateWatchJob(string containerId, Guid sessionId)
@@ -75,8 +81,9 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
             .Build();
         var trigger = TriggerBuilder
             .Create()
-            .StartNow()
+            .StartAt(DateTime.Now.AddSeconds(45))
             .ForJob(job)
+            .WithSimpleSchedule(x=>x.RepeatForever().WithIntervalInSeconds(45))
             .Build();
         var scheduler = await schedFactory.GetScheduler();
 

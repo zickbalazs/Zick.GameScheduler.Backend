@@ -5,6 +5,7 @@
 @inject NavigationManager Nav
 @inject ISnackbar SnackbarService
 @inject IDialogService DialogService
+@inject ILogger<Leagues.OverviewPage> Logger
 
 <PageTitle>ZGS | Manage Leagues</PageTitle>
 <TitleComponent Title="Manage Leagues"/>
@@ -101,6 +102,8 @@
             try
             {
                 await LeagueService.ChangeActiveTrack(id, (TrackDTO)result.Data);
+                Logger.LogInformation("active track for league {leagueId} was changed to {trackId}", 
+                    id, ((TrackDTO)result.Data).Id);
                 SnackbarService.Add(severity: Severity.Success, message: "Successful track change");
             }
             catch (Exception e)
@@ -115,6 +118,7 @@
         try
         {
             await LeagueService.DeleteLeague(id);
+            Logger.LogInformation("deleted league {leagueId}", id);
             Leagues = Leagues.Where(x => x.Id != id);
         }
         catch (Exception e)
@@ -142,6 +146,7 @@
     protected override async Task OnInitializedAsync()
     {
         Leagues = await LeagueService.GetLeagues();
+        Logger.LogInformation("fetched {leagueCount} from database", Leagues.Count());
         await base.OnInitializedAsync();
     }
 

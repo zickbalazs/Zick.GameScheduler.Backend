@@ -1,33 +1,53 @@
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Zick.GameScheduler.Backend.API.Hubs;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
 using Zick.GameScheduler.Services.API;
 using Zick.GameScheduler.Services.ServicesAPI;
 
-// TODO List:
-// - Services for proper frontend functions [ ]
-// - SignalR for real time registration data [ ]
-// - Auth for requests that require it [ ]
-// - Caching for cacheable requests (vehicles, tracks, etc.) [ ]
-// - Proper error templates
-
 var builder = WebApplication.CreateBuilder(args);
-builder.Logging.AddSystemdConsole(x =>
-{
-    x.TimestampFormat = "[%y-%M-%d: %h:%m:%s]: ";
-});
-builder.Logging.AddOpenTelemetry(opt => {
-        opt.AddOtlpExporter(x =>
+
+// Pre-checks for variables
+string backendUrl       = builder.Configuration.GetValue<string>("Cors:BackendURL") ??
+                          throw new ArgumentException("Backend url must be set"),
+       frontendUrl      = builder.Configuration.GetValue<string>("Cors:FrontendURL") ??
+                          throw new ArgumentException("Frontend url must be set"),
+       logsUrl          = builder.Configuration.GetValue<string>("OpenTelemetry:LogsEndpoint") ??
+                          throw new ArgumentException("OpenTelemetry endpoint was not set."),
+       tracesUrl        = builder.Configuration.GetValue<string>("OpenTelemetry:TracesEndpoint") ??
+                          throw new ArgumentException("OpenTelemetry Traces were not set."),
+       gameConnString   = builder.Configuration.GetConnectionString("GameDatabase") ??
+                          throw new ArgumentException("Game DB was not given");
+
+builder.AddOpenTelemetry()
+    .ConfigureResource(x =>
+    {
+        x.AddService(serviceName: builder.Environment.ApplicationName);
+    })
+    .WithTracing(x=>x
+        .AddAspNetCoreInstrumentation()
+        .AddEntityFrameworkCoreInstrumentation()
+        .AddOtlpExporter(options =>
         {
-            x.Protocol = OtlpExportProtocol.Grpc;
-        });
-        opt.IncludeFormattedMessage = true;
-        opt.IncludeScopes = true;
+            options.Endpoint = new Uri(tracesUrl);
+            options.Protocol = OtlpExportProtocol.HttpProtobuf;
+        }));
+
+
+
+builder.Logging.AddOpenTelemetry(opt => {
+    opt.AddOtlpExporter(x =>
+    {
+        x.Protocol = OtlpExportProtocol.HttpProtobuf;
+        x.Endpoint = new Uri(logsUrl);
+    });
+    opt.IncludeFormattedMessage = true;
+    opt.IncludeScopes = true;
 });
-builder.AddOpenTelemetry();
 
 // Add services to the container.
 builder.Services.AddOpenApi();
@@ -38,8 +58,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 
-string backendUrl = builder.Configuration.GetValue<string>("Cors:BackendURL") ?? throw new ArgumentException("Backend url must be set"),
-       frontendUrl = builder.Configuration.GetValue<string>("Cors:FrontendURL") ?? throw new ArgumentException("Frontend url must be set") ;
+
 builder.Services.AddCors(x =>
 {
     x.AddDefaultPolicy(m =>
@@ -60,14 +79,14 @@ if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
     {
-        opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");
+        opt.UseSqlite(gameConnString);
     });
 }
 else
 {
     builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
     {
-        opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
+        opt.UseNpgsql(gameConnString);
     });
 }
 

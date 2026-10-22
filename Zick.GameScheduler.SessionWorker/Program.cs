@@ -1,6 +1,10 @@
 using System.Runtime.InteropServices;
 using Docker.DotNet;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using Prometheus;
 using Quartz;
 using Quartz.AspNetCore;
 using Zick.GameScheduler.Backend.Data;
@@ -11,8 +15,44 @@ using Zick.GameScheduler.SessionWorker;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-if (builder.Configuration.GetValue<int?>("SessionProcessor:BatchLimit") == null)
-    throw new ArgumentNullException("SessionProcessor:BatchLimit", "Batch limit must be set in application settings");
+string swarmUrl   = builder.Configuration.GetValue<string>("Docker:SwarmUrl")
+                    ?? throw new ArgumentException("Docker Swarm's url was not set."),
+       logsUrl    = builder.Configuration.GetValue<string>("Telemetry:LogsEndpoint") 
+                    ?? throw new ArgumentException("Endpoint for logs must be set.");
+
+int batchLimit = builder.Configuration.GetValue<int?>("SessionProcessor:BatchLimit")
+                 ?? throw new ArgumentException("Batch limit was not set.");
+
+builder.Services.AddLogging(opt =>
+{
+    opt.AddOpenTelemetry(x =>
+    {
+        x.IncludeScopes = true;
+        x.IncludeFormattedMessage = true;
+    });
+});
+
+builder
+    .AddOpenTelemetry()
+    .ConfigureResource(x =>
+    {
+        x.AddService(serviceName: builder.Environment.ApplicationName);
+    })
+    .WithLogging(x =>
+    {
+        x.AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = new Uri(logsUrl);
+            opt.Protocol = OtlpExportProtocol.HttpProtobuf;
+        });
+    });
+
+Counter cancelledSessionMetric = 
+    Metrics.CreateCounter("sessions_cancelled_total", "Total sessions that were cancelled");
+Counter scheduledSessionMetric =
+    Metrics.CreateCounter("sessions_scheduled_total", "Total sessions that were scheduled for start");
+Counter lateSessionMetric =
+    Metrics.CreateCounter("sessions_late_total", "Total sessions that were late but within the acceptable delta");
 
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
@@ -23,9 +63,7 @@ builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt
         opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
 });
 
-builder.Services.AddScoped<IDockerClient>((_) => new DockerClientConfiguration(new Uri(
-    builder.Configuration.GetValue<string>("Docker:SwarmUrl")
-)).CreateClient());
+builder.Services.AddScoped<IDockerClient>((_) => new DockerClientConfiguration(new Uri(swarmUrl)).CreateClient());
 
 builder.Services.AddScoped<ApplicationContext<RacingUserIdentity>>(x =>
     x.GetRequiredService<IDbContextFactory<ApplicationContext<RacingUserIdentity>>>().CreateDbContext());
@@ -36,13 +74,9 @@ builder.Services.AddScoped<IPortClaimService, DbPortClaimService>();
 builder.Services.AddScoped<IContainerService, DockerSwarmContainerService>();
 
 
-builder.Services.AddLogging(opt =>
-{
-    opt.AddSystemdConsole(x =>
-    {
-        x.TimestampFormat = "[%y-%m-%d %H:%m:%s]: ";
-    });
-});
+
+
+
 
 builder.Services.AddHostedService<SessionProcessorWorker>();
 builder.Services.AddQuartz(opt =>
@@ -59,6 +93,12 @@ builder.Services.AddQuartz(opt =>
     });
 });
 builder.Services.AddQuartzServer();
+
+cancelledSessionMetric.Publish();
+lateSessionMetric.Publish();
+scheduledSessionMetric.Publish();
+using var metricServer = new KestrelMetricServer(port: 1100, url: "/metrics");
+metricServer.Start();
 
 var host = builder.Build();
 host.Run();

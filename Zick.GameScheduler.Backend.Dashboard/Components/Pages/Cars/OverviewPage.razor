@@ -4,6 +4,7 @@
 @inject IVehicleService VehicleService
 @inject NavigationManager NavManager
 @inject ISnackbar SnackbarService
+@inject ILogger<Cars.OverviewPage> Logger
 
 <PageTitle>ZGS | Manage Cars</PageTitle>
 <TitleComponent Title="Manage Cars"/>
@@ -47,11 +48,13 @@
         {
             ButtonsLocked = true;
             await VehicleService.DeleteVehicle(id);
+            Logger.LogInformation("deleted vehicle {carId} from db", id);
             Cars = [.. Cars.Where(x => x.Id != id)];
             ButtonsLocked = false;
         }
         catch (Exception e)
         {
+            Logger.LogError(e, "an error has occured on deletion of {carId}", id);
             SnackbarService.Add(severity: Severity.Error, message: e.Message);
         }
     }
@@ -64,6 +67,7 @@
     protected override async Task OnInitializedAsync()
     {
         Cars = await VehicleService.GetVehicles();
+        Logger.LogInformation("got {carCount} from database", Cars.Count);
         await base.OnInitializedAsync();
     }
 

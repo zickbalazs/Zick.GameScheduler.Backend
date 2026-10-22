@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 using Quartz;
 using Zick.GameScheduler.Backend.Data;
 using Zick.GameScheduler.Backend.Data.Models;
@@ -11,6 +12,15 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
     IDbContextFactory<ApplicationContext<RacingUserIdentity>> ctxFactory,
     ISchedulerFactory schedulerFactory) : BackgroundService
 {
+    private readonly Counter _cancelledSessionMetric = 
+        Metrics.CreateCounter("sessions_cancelled_total", "Total sessions that were cancelled");
+    private readonly Counter _scheduledSessionMetric =
+        Metrics.CreateCounter("sessions_scheduled_total", "Total sessions that were scheduled for start");
+    private readonly Counter _lateSessionMetric =
+        Metrics.CreateCounter("sessions_late_total", "Total sessions that were late but within the acceptable delta");
+    
+    
+    
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -47,6 +57,7 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
         if (sessionsCount > 0)
         {
             logger.LogWarning("cancelled {lateSessionCount} sessions for being too late", sessionsCount);
+            _cancelledSessionMetric.Inc(sessionsCount);
         }
     }
     
@@ -70,6 +81,8 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
             .WithIdentity(session.Id.ToString(), "start-jobs")
             .Build();
 
+        bool wasLate = false;
+        
         DateTime now = DateTime.Now;
         DateTime? plannedStart = null;
 
@@ -84,9 +97,9 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
             logger.LogWarning("{sessionId} session start is late, planned start was {sessionStartTime} actual start is {actualStartTime}",
                 session.Id,
                 session.Start,
-                plannedStart);    
+                plannedStart);
+            wasLate = true;
         }
-        
         
         var trigger = TriggerBuilder
             .Create()
@@ -96,8 +109,10 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
 
         var scheduler = await schedulerFactory.GetScheduler();
         await scheduler.ScheduleJob(job, trigger);
-    }
 
-    
-    
+        if (wasLate)
+            _lateSessionMetric.Inc();
+        else
+            _scheduledSessionMetric.Inc();
+    }
 }

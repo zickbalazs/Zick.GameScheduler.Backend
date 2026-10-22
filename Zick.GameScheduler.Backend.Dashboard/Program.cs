@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Quartz;
 using Quartz.AspNetCore;
 using Zick.GameScheduler.Backend.Dashboard.Common;
@@ -18,19 +20,39 @@ using ISessionService = Zick.GameScheduler.Services.Data.ISessionService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// TODO LIST:
-// - Logging (page data)
-// - switch out DbContext to DbContextFactory for thread safety
+string dbString = builder.Configuration.GetConnectionString("GameDatabase")
+                  ?? throw new ArgumentException("GameDb connection was not set."),
+       logUrl   = builder.Configuration.GetValue<string>("Telemetry:LogEndpoint") 
+                  ?? throw new ArgumentException("Telemetry.LogEndpoint was not set."),
+       traceUrl = builder.Configuration.GetValue<string>("Telemetry:TraceEndpoint") 
+                  ?? throw new ArgumentException("Telemetry.TraceEndpoint was not set.");
 
-// Add services to the container.
-builder.Services.AddOpenTelemetry();
+
+OtlpExporterOptions OtlpExporterOptsGen(string url)
+{
+    return new()
+    {
+        Endpoint = new Uri(url),
+        Protocol = OtlpExportProtocol.HttpProtobuf
+    };
+}
+
+builder
+    .AddOpenTelemetry()
+    .ConfigureResource(x =>
+    {
+        x.AddService(serviceName: builder.Environment.ApplicationName);
+    })
+    .WithTracing(opt =>
+    {
+        opt.AddAspNetCoreInstrumentation()
+           .AddEntityFrameworkCoreInstrumentation()
+           .AddOtlpExporter((_) => OtlpExporterOptsGen(traceUrl));
+    });
+
 builder.Logging.AddOpenTelemetry(opt =>
 {
-    opt.AddOtlpExporter(x =>
-    {
-        x.Protocol = OtlpExportProtocol.Grpc;
-        x.Endpoint = new Uri("http://localhost:4317");
-    });
+    opt.AddOtlpExporter((_) =>OtlpExporterOptsGen(logUrl));
     opt.IncludeFormattedMessage = true;
     opt.IncludeScopes = true;
 });
@@ -38,12 +60,10 @@ builder.Logging.AddOpenTelemetry(opt =>
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
     if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");
-
+        opt.UseSqlite(dbString);
     else
-        opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
+        opt.UseNpgsql(dbString);
 });
-
 
 // LOCAL SERVICES
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();

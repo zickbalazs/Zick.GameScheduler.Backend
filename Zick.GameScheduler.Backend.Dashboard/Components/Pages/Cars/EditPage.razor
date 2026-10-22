@@ -5,6 +5,7 @@
 @inject NavigationManager NavManager
 @inject IVehicleService VehicleService
 @inject ISnackbar SnackbarService
+@inject ILogger<Cars.EditPage> Logger
 
 <PageTitle>ZGS | Editing vehicle</PageTitle>
 <TitleComponent Title="@($"Edit: {OriginalCarName}")" />
@@ -64,6 +65,7 @@
         try
         {
             await VehicleService.EditVehicle(Car);
+            Logger.LogInformation("updated car {carId}", Id);
             NavManager.NavigateTo("/vehicles/overview");
         }
         catch (Exception e)
@@ -83,9 +85,13 @@
             Car.Manufacturer = dbEntry.Manufacturer;
             Car.Model = dbEntry.Model;
             Car.Folder = dbEntry.FolderName;
+            Logger.LogInformation("got car for edition");
         }
-        catch
+        catch(Exception e)
         {
+            if (e is not ArgumentNullException or InvalidOperationException)
+                Logger.LogError(e, "an error has occured during fetching of car {carId}", Id);
+                
             NavManager.NavigateTo("/vehicles/overview");
         }
         await base.OnInitializedAsync();
