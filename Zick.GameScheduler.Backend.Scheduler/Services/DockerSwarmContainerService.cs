@@ -26,7 +26,6 @@ public class DockerSwarmContainerService(IDockerClient client,
         var serviceSpec = Utils.SwarmUtils.CreateSpec(sessionId, configId, ports[0], ports[1]);
         serviceSpec = await CreateEnvForServiceSpec(sessionId, serviceSpec, ports[0], ports[1]);
         
-        
         var serviceResponse = await client.Swarm
             .CreateServiceAsync(new(){
                 Service = serviceSpec
@@ -35,12 +34,6 @@ public class DockerSwarmContainerService(IDockerClient client,
         logger.LogInformation("[session {sessionId}]: Started service for race with id {serviceId}", 
             sessionId,
             serviceResponse.ID);
-
-        var tasks = await client.Tasks.ListAsync();
-
-        var task = tasks.First(x=>x.ServiceID == serviceResponse.ID);
-
-        await Task.Delay(10000);
 
         return serviceResponse.ID;
     }

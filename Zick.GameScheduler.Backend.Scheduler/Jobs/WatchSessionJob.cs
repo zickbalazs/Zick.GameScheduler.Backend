@@ -12,6 +12,7 @@ public class WatchSessionJob(IDockerClient dockerClient,
     public async Task Execute(IJobExecutionContext context)
     {
         var sessionId = context.JobDetail.Key.Name;
+        var serviceId = context.JobDetail.Description!;
         logger.LogInformation("watching session: {sessionId}", sessionId);
     }
 }
