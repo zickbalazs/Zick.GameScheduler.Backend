@@ -35,7 +35,7 @@ public static class SwarmUtils
                         new()
                         {
                             ConfigID = configId,
-                            ConfigName = $"{sessionId}-config",
+                            ConfigName = $"{sessionId}",
                             File = new()
                             {
                                 Name = "/opt/app/assetto-dedicated/server/cfg/entry_list.ini",

@@ -14,16 +14,9 @@ public class EndSessionJob(IContainerService containerService,
     {
         Guid sessionId = new Guid(context.JobDetail.Key.Name);
         string containerId = context.JobDetail.Description!;
-
-
         
         await claimService.EndClaimForSession(sessionId);
         //await resultConsumer.ConsumeAndUploadResult(sessionId, "");
         await containerService.StopContainerForSession(sessionId, containerId);
-        
-
-
-
-
     }
 }

@@ -17,51 +17,52 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
         {
             logger.LogInformation("started session collection");
             await DoWork();
+            logger.LogInformation("stopped session collection");
             await Task.Delay(60000, stoppingToken);
         }
     }
 
     private async Task DoWork()
     {
-        LeagueSession<RacingUserIdentity>[] newSessions;
-        
+        IList<LeagueSession<RacingUserIdentity>> sessions;
         await using (var ctx = await ctxFactory.CreateDbContextAsync())
         {
-            var sessionsToProcess = ctx.Sessions
-                .Include(x=>x.League)
-                .Where(SessionIsInADayAndIsCreated)
-                .Take(config.GetValue<int>("SessionProcessor:BatchLimit"));
-
-            newSessions = [ ..sessionsToProcess ];
-            
-            logger.LogInformation("found {sessionCount} sessions for processing", newSessions.Length);
+            await CancelOldSessions(ctx);
+            sessions = await EnqueueSessions(ctx);
         }
-        
-        if (newSessions.Length < 1)
-            return;
-
-        await using (var ctx = await ctxFactory.CreateDbContextAsync())
-        {
-            foreach (var session in newSessions)
-            {
-                var dbEntry = await ctx.Sessions.FirstAsync(x => x.Id == session.Id);
-                dbEntry.Status = SessionStatus.Waiting;
-            }
-            await ctx.SaveChangesAsync();
-        }
-
-        foreach (var session in newSessions)
+        foreach (var session in sessions)
         {
             await CreateJobWithTrigger(session);
         }
     }
 
-    private bool SessionIsInADayAndIsCreated(LeagueSession<RacingUserIdentity> session)
+    private async Task CancelOldSessions(ApplicationContext<RacingUserIdentity> ctx)
     {
-        return session.Start < DateTime.Now + TimeSpan.FromDays(1) && session.Status == SessionStatus.Created;
+        DateTime tooLate = DateTime.Now.AddMinutes(-30);
+
+        var sessionsCount = await ctx.Sessions
+            .Where(x => x.Start < tooLate && x.Status==SessionStatus.Created)
+            .ExecuteUpdateAsync(x => x.SetProperty(n => n.Status, SessionStatus.Cancelled));
+
+        if (sessionsCount > 0)
+        {
+            logger.LogWarning("cancelled {lateSessionCount} sessions for being too late", sessionsCount);
+        }
     }
     
-    
+    private async Task<IList<LeagueSession<RacingUserIdentity>>> EnqueueSessions(ApplicationContext<RacingUserIdentity> ctx)
+    {
+        DateTime signDelta = DateTime.Now.AddHours(2);
+        var sessionsCount = ctx.Sessions
+            .Where(x => x.Start < signDelta && x.Status == SessionStatus.Created)
+            .OrderBy(x => x.Start)
+            .Take(config.GetValue<int>("SessionProcessor:BatchLimit"));
+        logger.LogInformation("found {sessionCount} for scheduling", sessionsCount.Count());
+        var r = sessionsCount.ToList();
+        await sessionsCount.ExecuteUpdateAsync(x => x.SetProperty(n => n.Status, SessionStatus.Waiting));
+        return r;
+    }
+
     private async Task CreateJobWithTrigger(LeagueSession<RacingUserIdentity> session)
     {
         var job = JobBuilder
@@ -71,15 +72,19 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
 
         DateTime now = DateTime.Now;
         DateTime? plannedStart = null;
-        
-        
+
         if (session.Start < now)
         {
-            plannedStart = DateTime.Now + TimeSpan.FromMinutes(2);
+            plannedStart = DateTime.Now + TimeSpan.FromMinutes(5);
+            await using (var ctx = await ctxFactory.CreateDbContextAsync())
+            {
+                ctx.Sessions.First(x => x.Id == session.Id).Start = plannedStart ?? DateTime.Now;
+                await ctx.SaveChangesAsync();
+            }
             logger.LogWarning("{sessionId} session start is late, planned start was {sessionStartTime} actual start is {actualStartTime}",
                 session.Id,
                 session.Start,
-                plannedStart);
+                plannedStart);    
         }
         
         
@@ -92,5 +97,7 @@ public class SessionProcessorWorker(ILogger<SessionProcessorWorker> logger,
         var scheduler = await schedulerFactory.GetScheduler();
         await scheduler.ScheduleJob(job, trigger);
     }
+
+    
     
 }

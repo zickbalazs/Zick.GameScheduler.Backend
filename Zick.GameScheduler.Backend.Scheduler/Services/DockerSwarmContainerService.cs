@@ -51,12 +51,17 @@ public class DockerSwarmContainerService(IDockerClient client,
         await ExtractResults(sessionId, 
             tasks.First(x => x.ServiceID == containerId).Status.ContainerStatus.ContainerID);
         await client.Swarm.RemoveServiceAsync(containerId);
-        await client.Configs.RemoveConfigAsync($"{sessionId}-config");
+        await DeleteConfForSession(sessionId);
     }
 
     public Task RecoverContainerForSession(Guid sessionId, string containerId)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task DeleteConfForSession(Guid sessionId)
+    {
+        await client.Configs.RemoveConfigAsync($"{sessionId}");
     }
 
     private async Task ExtractResults(Guid sessionId, string containerId)
@@ -82,7 +87,7 @@ public class DockerSwarmContainerService(IDockerClient client,
         {
             Config = new SwarmConfigSpec()
             {
-                Name = $"{sessionId}-initial",
+                Name = $"{sessionId}",
                 Data = Encoding.UTF8.GetBytes(entryListContents)
             }
         });
@@ -100,6 +105,7 @@ public class DockerSwarmContainerService(IDockerClient client,
     {
         var sessionEntry = await ctx.Sessions
             .Include(x=>x.League)
+            .ThenInclude(x=>x.CurrentTrack)
             .Include(n=>n.Track)
             .Include(x=>x.Registrations)
             .ThenInclude(m=>m.Car)
@@ -108,10 +114,18 @@ public class DockerSwarmContainerService(IDockerClient client,
         string serverPass = sessionEntry.GetHashCode().ToString();
 
         await portClaimService.AddPasswordForSession(sessionEntry.PortClaim!.Id, serverPass);
+
+        int pracTime = sessionEntry.League.Practice == null ? 0 : sessionEntry.League.Practice.DurationInMinutes ?? 0;
+        int qualyTime = sessionEntry.League.Qualify == null ? 0 : sessionEntry.League.Qualify.DurationInMinutes ?? 0;
+        int raceTime = sessionEntry.League.Race == null ? 0 : sessionEntry.League.Race.DurationInMinutes ?? 0;
+        int raceLaps = sessionEntry.League.Race == null ? 0 : sessionEntry.League.Race.Laps ?? 0;
         
         spec.TaskTemplate.ContainerSpec.Env = new List<string>()
         {
-            $"PRAC_TIME={sessionEntry.League.Practice?.DurationInMinutes}",
+            $"PRAC_TIME={pracTime}",
+            $"QUALY_TIME={qualyTime}",
+            $"RACE_TIME={raceTime}",
+            $"RACE_LAPS={raceLaps}",
             $"VEHICLES={string.Join(";",sessionEntry.Registrations.Select(x=>x.Car.FolderName).Distinct())}",
             $"SERVER_NAME='Zick GameScheduler {sessionId}'",
             $"TRACK={sessionEntry.Track?.FolderName ?? sessionEntry.League.CurrentTrack.FolderName}",

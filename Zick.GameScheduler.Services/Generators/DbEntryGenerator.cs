@@ -27,7 +27,7 @@ public class DbEntryGenerator(ILogger<DbEntryGenerator> logger,
             var registration = session.Registrations[i];
             entries.Add(registration.CreateEntryListEntry(i, registration.User.SteamId!));
         }
-        logger.LogInformation("entry generated, {entryList}", string.Join("\n\n", entries));
+        logger.LogInformation("entry generated");
         return string.Join("\n\n", entries);
     }
 

@@ -73,6 +73,7 @@ public class DbLeagueService(IDbContextFactory<ApplicationContext<RacingUserIden
                 .. ctx.Leagues
                     .Include(x => x.Sessions)
                     .ThenInclude(x => x.Registrations)
+                    .ThenInclude(x=>x.User)
                     .Include(x => x.CurrentTrack)
                     .Include(x => x.Classes)
             ];

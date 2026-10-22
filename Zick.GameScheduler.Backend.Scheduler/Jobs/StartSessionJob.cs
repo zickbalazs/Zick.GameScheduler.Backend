@@ -47,11 +47,23 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
         await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);
         logger.LogInformation("[startJob | session: {sessionId}]: Pre-checks done, starting job for session", sessionId);
         
-        var ports = (await portClaimService.ClaimPortForSession(sessionId)).Split(';');
-        
-        var containerId = await containerService.StartContainerForSession(sessionId);
+        try
+        {
+            var containerId = await containerService.StartContainerForSession(sessionId);
+            await CreateWatchJob(containerId, sessionId);
+            await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Underway);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[startJob | session: {sessionId}]: Session start failed with message {message}\nstack: {stack}",
+                sessionId,
+                e.Message,
+                e.StackTrace);
+            await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Error);
+            await portClaimService.EndClaimForSession(sessionId);
+            await containerService.DeleteConfForSession(sessionId);
+        }
 
-        await CreateWatchJob(containerId, sessionId);
     }
 
     private async Task CreateWatchJob(string containerId, Guid sessionId)

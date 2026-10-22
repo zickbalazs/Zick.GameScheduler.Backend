@@ -115,6 +115,11 @@ public class DockerEngineContainerService(IDockerClient dockerClient,
         throw new NotImplementedException();
     }
 
+    public Task DeleteConfForSession(Guid sessionId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task CreateEntryListForSession(Guid sessionId, string entryListContents)
     {
         var configId = await dockerClient.Configs.CreateConfigAsync(new()
