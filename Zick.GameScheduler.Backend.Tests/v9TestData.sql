@@ -1,4 +1,4 @@
-INSERT INTO Tracks (Id, CountryCode, FolderName, Name) VALUES ('E306F302-8557-4BC0-82DC-5F21BBBA55CC', 'BEL', '/content/tracks/ks_spa', 'Spa');
+INSERT INTO Tracks (Id, CountryCode, FolderName, Name) VALUES ('E306F302-8557-4BC0-82DC-5F21BBBA55CC', 'BEL', 'spa', 'Spa');
 INSERT INTO Classes (Abbreviation, Color, Name) VALUES ('CSTM', null, 'Custom Races Class');
 INSERT INTO Leagues (Id, CurrentTrackId, Description, End, Interval, Name, Practice_DurationInMinutes, Practice_Laps, Practice_SessionName, Qualify_DurationInMinutes, Qualify_Laps, Qualify_SessionName, Race_DurationInMinutes, Race_Laps, Race_SessionName, Start) VALUES ('CF4B486E-430C-4508-A1E9-DF636468EE53', 'E306F302-8557-4BC0-82DC-5F21BBBA55CC', null, '9999-12-31 23:59:59.9999999', '365.00:00:00', 'Custom Racing League', 20, null, 'Practice', 12, null, 'Qualifying', 30, null, 'Main Event', '2026-10-07 08:56:23.721892');
 INSERT INTO Sessions (Id, LeagueId, PortClaimId, Start, Status, TrackId) VALUES ('EB913E83-C366-4D8D-9221-A6EA1F9E4C66', 'CF4B486E-430C-4508-A1E9-DF636468EE53', null, '2026-10-07 09:02:46.421667', 0, 'E306F302-8557-4BC0-82DC-5F21BBBA55CC');

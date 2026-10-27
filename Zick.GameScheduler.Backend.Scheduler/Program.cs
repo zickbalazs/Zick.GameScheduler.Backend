@@ -1,47 +1,76 @@
-﻿using System.Runtime.InteropServices;
+﻿using Docker.DotNet;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using Quartz;
 using Quartz.AspNetCore;
+using Zick.GameScheduler.Backend.Data;
+using Zick.GameScheduler.Backend.Data.Models;
+using Zick.GameScheduler.Backend.Scheduler.Services;
+using Zick.GameScheduler.Services.Generators;
 
-namespace Zick.GameScheduler.Backend.Scheduler
+var builder = Host.CreateApplicationBuilder(args);
+
+string gameDb =   builder.Configuration.GetConnectionString("GameDatabase")
+                  ?? throw new ArgumentException("GameDatabase connection was not set."),
+    schedulerDb = builder.Configuration.GetConnectionString("SchedulerDatabase")
+                  ?? throw new ArgumentException("SchedulerDatabase connection was not set."),
+    swarmUrl    = builder.Configuration.GetValue<string>("Docker:SwarmUrl")
+                  ?? throw new ArgumentException("Docker.SwarmUrl was not set."),
+    logsUrl     = builder.Configuration.GetValue<string>("Telemetry:LogsUrl")
+                  ?? throw new ArgumentException("Telemetry.LogsUrl was not set.");
+
+builder.Logging.AddOpenTelemetry(opt =>
 {
-    public static class Program
+    opt.IncludeFormattedMessage = true;
+    opt.IncludeScopes = true;
+    opt.AddOtlpExporter(x =>
     {
-        public static void Main(string[] args)
-        {
-            var builder = new HostApplicationBuilder(args);
+        x.Endpoint = new Uri(logsUrl);
+        x.Protocol = OtlpExportProtocol.HttpProtobuf;
+    });
+});
+builder.Services.AddOpenTelemetry();
 
-            builder.Services.AddOpenTelemetry();
-            builder.Logging.AddOpenTelemetry();
-            
-            
-            builder.Services.AddQuartz(quartz =>
-            {
-                quartz.UsePersistentStore(o =>
-                {
-                    o.UseSystemTextJsonSerializer();
-                    o.UseProperties = true;
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                        o.UseSQLite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "sched.db")}");
-                    else
-                        o.UsePostgres(Environment.GetEnvironmentVariable("RACE_SCHED_DB") ?? 
-                                      throw new KeyNotFoundException("Connection String not found!"));
-                });
 
-            });
+builder.Services.AddQuartz(opt =>
+{
+    opt.UsePersistentStore(x =>
+    {
+        x.PerformSchemaValidation = true;
+        x.UseProperties = true;
+        x.UseSystemTextJsonSerializer();
+        x.UseSQLite(schedulerDb);
+    });
+});
 
-            builder.Services.AddQuartzServer(quartz =>
-            {
-                quartz.WaitForJobsToComplete = false;
-            });
+builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
+{
+    opt.UseSqlite(gameDb);
+});
+builder.Services.AddScoped<ApplicationContext<RacingUserIdentity>>(x =>
+    x.GetRequiredService<IDbContextFactory<ApplicationContext<RacingUserIdentity>>>().CreateDbContext());
 
-                        
-            
-            var app = builder.Build();
-            
-            app.Run();
-        }    
-    }
-}
+
+builder.Services.AddScoped<IDockerClient>(_ => new DockerClientConfiguration(new Uri(swarmUrl)).CreateClient());
+builder.Services.AddScoped<IPortClaimService, DbPortClaimService>();
+builder.Services.AddScoped<IEntryGenerator<RacingUserIdentity>, DbEntryGenerator>();
+builder.Services.AddScoped<ISessionStatusUpdateService, DbSessionStatusUpdateService>();
+builder.Services.AddScoped<IContainerService, DockerSwarmContainerService>();
+
+
+
+
+
+
+builder.Services.AddQuartzServer(o =>
+{
+    o.WaitForJobsToComplete = true;
+});
+
+var app = builder.Build();
+app.Run();

@@ -15,10 +15,12 @@ using Zick.GameScheduler.SessionWorker;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-string swarmUrl   = builder.Configuration.GetValue<string>("Docker:SwarmUrl")
-                    ?? throw new ArgumentException("Docker Swarm's url was not set."),
-       logsUrl    = builder.Configuration.GetValue<string>("Telemetry:LogsEndpoint") 
-                    ?? throw new ArgumentException("Endpoint for logs must be set.");
+string logsUrl = builder.Configuration.GetValue<string>("Telemetry:LogsEndpoint") 
+                    ?? throw new ArgumentException("Endpoint for logs must be set."),
+       gameDb  = builder.Configuration.GetConnectionString("GameDatabase")
+                 ?? throw new ArgumentException("GameDatabase connection was not set."),
+       schedDb = builder.Configuration.GetConnectionString("SchedulerDatabase")
+                 ?? throw new ArgumentException("SchedulerDatabase connection was not set.");
 
 int batchLimit = builder.Configuration.GetValue<int?>("SessionProcessor:BatchLimit")
                  ?? throw new ArgumentException("Batch limit was not set.");
@@ -29,6 +31,11 @@ builder.Services.AddLogging(opt =>
     {
         x.IncludeScopes = true;
         x.IncludeFormattedMessage = true;
+        x.AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = new Uri(logsUrl);
+            opt.Protocol = OtlpExportProtocol.HttpProtobuf;
+        });
     });
 });
 
@@ -56,27 +63,8 @@ Counter lateSessionMetric =
 
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
-    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");
-
-    else
-        opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
+    opt.UseSqlite(gameDb);
 });
-
-builder.Services.AddScoped<IDockerClient>((_) => new DockerClientConfiguration(new Uri(swarmUrl)).CreateClient());
-
-builder.Services.AddScoped<ApplicationContext<RacingUserIdentity>>(x =>
-    x.GetRequiredService<IDbContextFactory<ApplicationContext<RacingUserIdentity>>>().CreateDbContext());
-
-builder.Services.AddScoped<ISessionStatusUpdateService, DbSessionStatusUpdateService>();
-builder.Services.AddScoped<IEntryGenerator<RacingUserIdentity>, DbEntryGenerator>();
-builder.Services.AddScoped<IPortClaimService, DbPortClaimService>();
-builder.Services.AddScoped<IContainerService, DockerSwarmContainerService>();
-
-
-
-
-
 
 builder.Services.AddHostedService<SessionProcessorWorker>();
 builder.Services.AddQuartz(opt =>
@@ -85,14 +73,9 @@ builder.Services.AddQuartz(opt =>
     {
         o.UseSystemTextJsonSerializer();
         o.UseProperties = true;
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            o.UseSQLite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "sched.db")}");
-        else
-            o.UsePostgres(Environment.GetEnvironmentVariable("RACE_SCHED_DB") ?? 
-                          throw new KeyNotFoundException("Connection String not found!"));
+        o.UseSQLite(schedDb);
     });
 });
-builder.Services.AddQuartzServer();
 
 cancelledSessionMetric.Publish();
 lateSessionMetric.Publish();

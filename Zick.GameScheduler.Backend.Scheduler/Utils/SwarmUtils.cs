@@ -9,7 +9,13 @@ public static class SwarmUtils
         string serverPort, 
         string httpPort)
     {
+        string resultPath = $"/data/zick-gs/results/session-{sessionId}";
+        
+        
         //TODO: Conf version not needed, Env variables for session.
+        if (!Directory.Exists(resultPath))
+            Directory.CreateDirectory(resultPath);
+        
         return new()
         {
             Name = $"session-{sessionId}",
@@ -24,6 +30,15 @@ public static class SwarmUtils
                 ContainerSpec = new()
                 {
                     Image = "zickbalazs/assetto-server:latest",
+                    Mounts = new List<Mount>()
+                    {
+                      new Mount()
+                      {
+                          Type = "bind",
+                          Target = "/opt/app/assetto-dedicated/server/results",
+                          Source = resultPath,
+                      }
+                    },
                     Command = new List<string>()
                     {
                         "/bin/sh",

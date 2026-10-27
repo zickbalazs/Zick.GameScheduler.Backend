@@ -21,32 +21,33 @@ public class StartSessionJob(ILogger<StartSessionJob> logger,
         Guid sessionId = new Guid(context.JobDetail.Key.Name);
         logger.LogInformation("[startJob | session: {sessionId}]: job start", sessionId);
 
+        LeagueSession<RacingUserIdentity> s;
+        
         await using (var ctx = await contextFactory.CreateDbContextAsync())
         {
-            var session = ctx.Sessions
+            s = ctx.Sessions
                 .Include(x=>x.Registrations)
                 .Include(x=>x.League)
                 .ThenInclude(x=>x.CurrentTrack)
                 .First(x => x.Id == sessionId);
-
-            if (session.Registrations.Count < 2)
-            {
-                await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Cancelled);
-                logger.LogWarning(
-                    "[startJob | session: {sessionId}]: stopping startup for session, not enough registrations",
-                    sessionId);
-                return;
-            }
-
-            if (session.Status == SessionStatus.Cancelled)
-            {
-                logger.LogWarning("[startJob | session: {sessionId}]: session was cancelled while waiting",
-                    sessionId);
-                return;
-            }
-
-            session.Track = session.League.CurrentTrack;
+            s.Track = s.League.CurrentTrack;
             await ctx.SaveChangesAsync();
+        }
+        
+        if (s.Status == SessionStatus.Cancelled)
+        {
+            logger.LogWarning("[startJob | session: {sessionId}]: session was cancelled while waiting",
+                sessionId);
+            return;
+        }
+        
+        if (s.Registrations.Count < 2)
+        {
+            await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Cancelled);
+            logger.LogWarning(
+                "[startJob | session: {sessionId}]: stopping startup for session, not enough registrations",
+                sessionId);
+            return;
         }
         
         await updateService.UpdateSessionWithStatus(sessionId, SessionStatus.Starting);

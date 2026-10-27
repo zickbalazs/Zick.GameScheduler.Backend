@@ -52,9 +52,10 @@ builder
 
 builder.Logging.AddOpenTelemetry(opt =>
 {
-    opt.AddOtlpExporter((_) =>OtlpExporterOptsGen(logUrl));
     opt.IncludeFormattedMessage = true;
     opt.IncludeScopes = true;
+    opt.AddOtlpExporter((_) =>OtlpExporterOptsGen(logUrl));
+    
 });
 
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
