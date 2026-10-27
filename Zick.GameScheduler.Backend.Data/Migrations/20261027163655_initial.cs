@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Zick.GameScheduler.Backend.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class v3 : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -80,12 +80,28 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PortClaims",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ServerPassword = table.Column<string>(type: "text", nullable: true),
+                    ClaimedPort = table.Column<string>(type: "text", nullable: false),
+                    ClaimedHttpPort = table.Column<string>(type: "text", nullable: false),
+                    IsInUse = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PortClaims", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tracks",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     CountryCode = table.Column<string>(type: "text", nullable: true),
+                    MaxCapacity = table.Column<int>(type: "integer", nullable: false),
                     FolderName = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -284,19 +300,32 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
                     Start = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LeagueId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TrackId = table.Column<Guid>(type: "uuid", nullable: true)
+                    TrackId = table.Column<Guid>(type: "uuid", nullable: true),
+                    PortClaimId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RacingUserIdentityId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Sessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Sessions_AspNetUsers_RacingUserIdentityId",
+                        column: x => x.RacingUserIdentityId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Sessions_Leagues_LeagueId",
                         column: x => x.LeagueId,
                         principalTable: "Leagues",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Sessions_PortClaims_PortClaimId",
+                        column: x => x.PortClaimId,
+                        principalTable: "PortClaims",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Sessions_Tracks_TrackId",
                         column: x => x.TrackId,
@@ -305,25 +334,82 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "LeagueSession<RacingUserIdentity>RacingUserIdentity",
+                name: "Registrations",
                 columns: table => new
                 {
-                    RegistrationsId = table.Column<string>(type: "text", nullable: false),
-                    SessionsId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: true),
+                    SessionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CarId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LeagueSession<RacingUserIdentity>RacingUserIdentity", x => new { x.RegistrationsId, x.SessionsId });
+                    table.PrimaryKey("PK_Registrations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_LeagueSession<RacingUserIdentity>RacingUserIdentity_AspNetU~",
-                        column: x => x.RegistrationsId,
+                        name: "FK_Registrations_AspNetUsers_UserId",
+                        column: x => x.UserId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Registrations_Cars_CarId",
+                        column: x => x.CarId,
+                        principalTable: "Cars",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_LeagueSession<RacingUserIdentity>RacingUserIdentity_Session~",
-                        column: x => x.SessionsId,
+                        name: "FK_Registrations_Sessions_SessionId",
+                        column: x => x.SessionId,
                         principalTable: "Sessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Results",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SessionName = table.Column<string>(type: "text", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Results", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Results_Sessions_SessionId",
+                        column: x => x.SessionId,
+                        principalTable: "Sessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ResultDetails",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Position = table.Column<int>(type: "integer", nullable: false),
+                    IsDisqualified = table.Column<bool>(type: "boolean", nullable: false),
+                    IsPenalized = table.Column<bool>(type: "boolean", nullable: false),
+                    PenaltyTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    BestLapTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    TotalTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    CarName = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: true),
+                    SessionResultId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ResultDetails", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ResultDetails_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ResultDetails_Results_SessionResultId",
+                        column: x => x.SessionResultId,
+                        principalTable: "Results",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -381,14 +467,49 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                 column: "CurrentTrackId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LeagueSession<RacingUserIdentity>RacingUserIdentity_Session~",
-                table: "LeagueSession<RacingUserIdentity>RacingUserIdentity",
-                column: "SessionsId");
+                name: "IX_Registrations_CarId",
+                table: "Registrations",
+                column: "CarId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Registrations_SessionId",
+                table: "Registrations",
+                column: "SessionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Registrations_UserId",
+                table: "Registrations",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ResultDetails_SessionResultId",
+                table: "ResultDetails",
+                column: "SessionResultId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ResultDetails_UserId",
+                table: "ResultDetails",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Results_SessionId",
+                table: "Results",
+                column: "SessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sessions_LeagueId",
                 table: "Sessions",
                 column: "LeagueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sessions_PortClaimId",
+                table: "Sessions",
+                column: "PortClaimId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sessions_RacingUserIdentityId",
+                table: "Sessions",
+                column: "RacingUserIdentityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sessions_TrackId",
@@ -421,25 +542,34 @@ namespace Zick.GameScheduler.Backend.Data.Migrations
                 name: "League<RacingUserIdentity>RacingClass<RacingUserIdentity>");
 
             migrationBuilder.DropTable(
-                name: "LeagueSession<RacingUserIdentity>RacingUserIdentity");
+                name: "Registrations");
+
+            migrationBuilder.DropTable(
+                name: "ResultDetails");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Cars");
-
-            migrationBuilder.DropTable(
                 name: "Classes");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Cars");
+
+            migrationBuilder.DropTable(
+                name: "Results");
 
             migrationBuilder.DropTable(
                 name: "Sessions");
 
             migrationBuilder.DropTable(
+                name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
                 name: "Leagues");
+
+            migrationBuilder.DropTable(
+                name: "PortClaims");
 
             migrationBuilder.DropTable(
                 name: "Tracks");

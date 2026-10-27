@@ -18,7 +18,8 @@ public class AddLeagueForm
     
     public TimeSpan Interval { get; set; }
 
-    public DateRange FromToRange { get; set; } = new();
+    public DateRange FromToRange { get; set; } = new()
+    {};
     
     public TrackDTO? CurrentTrack { get; set; }
 

@@ -63,7 +63,7 @@ Counter lateSessionMetric =
 
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
-    opt.UseSqlite(gameDb);
+    opt.UseNpgsql(gameDb);
 });
 
 builder.Services.AddHostedService<SessionProcessorWorker>();
@@ -73,7 +73,7 @@ builder.Services.AddQuartz(opt =>
     {
         o.UseSystemTextJsonSerializer();
         o.UseProperties = true;
-        o.UseSQLite(schedDb);
+        o.UsePostgres(schedDb);
     });
 });
 

@@ -74,21 +74,10 @@ builder.Services.AddCors(x =>
     });
 });
 
-
-if (builder.Environment.IsDevelopment())
+builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
 {
-    builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
-    {
-        opt.UseSqlite(gameConnString);
-    });
-}
-else
-{
-    builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
-    {
-        opt.UseNpgsql(gameConnString);
-    });
-}
+    opt.UseNpgsql(gameConnString);
+});
 
 // DATA OBJECTS
 builder.Services.AddScoped<IVehicleService, DbVehicleService>();

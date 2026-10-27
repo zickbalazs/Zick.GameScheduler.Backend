@@ -60,10 +60,7 @@ builder.Logging.AddOpenTelemetry(opt =>
 
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
-    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        opt.UseSqlite(dbString);
-    else
-        opt.UseNpgsql(dbString);
+    opt.UseNpgsql(dbString);
 });
 
 // LOCAL SERVICES

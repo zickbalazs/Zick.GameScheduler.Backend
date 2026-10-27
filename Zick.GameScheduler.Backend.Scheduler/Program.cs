@@ -44,13 +44,14 @@ builder.Services.AddQuartz(opt =>
         x.PerformSchemaValidation = true;
         x.UseProperties = true;
         x.UseSystemTextJsonSerializer();
-        x.UseSQLite(schedulerDb);
+        x.UsePostgres(schedulerDb);
+        x.UseClustering();
     });
 });
 
 builder.Services.AddDbContextFactory<ApplicationContext<RacingUserIdentity>>(opt =>
 {
-    opt.UseSqlite(gameDb);
+    opt.UseNpgsql(gameDb);
 });
 builder.Services.AddScoped<ApplicationContext<RacingUserIdentity>>(x =>
     x.GetRequiredService<IDbContextFactory<ApplicationContext<RacingUserIdentity>>>().CreateDbContext());

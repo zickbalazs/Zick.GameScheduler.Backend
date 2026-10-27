@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Zick.GameScheduler.Backend.Data.Models;
@@ -12,20 +13,10 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = new HostApplicationBuilder(args);
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && builder.Environment.IsDevelopment())
+        builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
         {
-            builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
-            {
-                opt.UseSqlite($"Data Source={Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "com.zick.gs", "race.db")}");
-            });
-        }
-        else
-        {
-            builder.Services.AddDbContext<ApplicationContext<RacingUserIdentity>>(opt =>
-            {
-                opt.UseNpgsql(Environment.GetEnvironmentVariable("RACE_DB"));
-            });    
-        }
+            opt.UseNpgsql(builder.Configuration.GetConnectionString("GameDb"));
+        });    
         var app = builder.Build();
         
         app.Run();

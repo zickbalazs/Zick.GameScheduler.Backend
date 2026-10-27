@@ -15,8 +15,8 @@ public class League<TUserIdentity> where TUserIdentity : IdentityUser
     public string? Description { get; set; }
 
     public TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(60);
-    public DateTime Start { get; set; } = DateTime.Now;
-    public DateTime End { get; set; } = DateTime.Now + TimeSpan.FromDays(10);
+    public DateTime Start { get; set; } = DateTime.UtcNow;
+    public DateTime End { get; set; } = DateTime.UtcNow + TimeSpan.FromDays(10);
     
     public SessionData? Practice { get; set; }
     public SessionData? Qualify { get; set; }
